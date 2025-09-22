@@ -27,6 +27,7 @@ jobs:
           npm run build
         env:
           CI: true
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
 
       - name: Deploy Next.js to VPS
         uses: appleboy/ssh-action@v1.0.3
