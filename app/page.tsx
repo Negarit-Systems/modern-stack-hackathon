@@ -36,7 +36,7 @@ export default function Home() {
 
   return (
     <main className="p-4">
-      <h1 className="text-2xl font-bold mb-4">User App with Convex</h1>
+      <h1 className="text-2xl font-bold mb-4">Hello from User App with Convex</h1>
 
       {/* Create Form */}
       <div className="mb-4 flex flex-col gap-2 max-w-sm">
