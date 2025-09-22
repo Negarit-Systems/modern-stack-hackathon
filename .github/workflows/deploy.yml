@@ -18,6 +18,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
+      - name: Generate Convex types
+        run: npx convex codegen
+
       - name: Install and build Next.js
         run: |
           npm ci
