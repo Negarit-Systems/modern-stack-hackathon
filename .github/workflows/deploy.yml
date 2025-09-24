@@ -15,6 +15,7 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
+          cache-dependency-path: package-lock.json
       - run: npm ci
       - run: npx convex codegen
       - run: npm run build
@@ -34,8 +35,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /var/www/modern-stack-hackathon
-            git fetch origin main
-            git reset --hard origin/main
+            git pull origin main
             npm ci
             npm run build
             pm2 restart modern-stack-hackathon-next --update-env || \
