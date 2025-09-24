@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { makePartial } from "../utils/utils";
-import { sessionSchema } from "../schema";
+import { sessionSchema } from "../Schemas/session.schema";
 
 // QUERIES
 export const get = query({
