@@ -1,4 +1,4 @@
-import { chatbotQuerySchema } from "./chatBoat.schema";
+import { chatbotQuerySchema } from "./chatBot.schema";
 import { commentSchema } from "./comment.schema";
 import { documentSchema } from "./document.schema";
 import { groupChatSchema } from "./groupChat.schema";
