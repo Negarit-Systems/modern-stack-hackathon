@@ -40,7 +40,7 @@ export const scrapeAndStore = action({
 
       const parsedItem = firecrawlResponseSchema.parse(item.json);
       await ctx.runMutation(
-        internal.crud.scrappedData.internalCreateScrappedData,
+        internal.crud.scrapedData.internalCreatescrapedData,
         {
           item: {
             sessionId: args.sessionId,

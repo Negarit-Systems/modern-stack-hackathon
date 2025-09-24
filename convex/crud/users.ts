@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
-import { userSchema } from "../Schemas";
+import { userSchema } from "../schemas";
 import { makePartial } from "../utils/utils";
 
 // QUERIES

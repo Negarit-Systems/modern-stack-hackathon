@@ -1,5 +1,5 @@
 import { defineSchema, defineTable } from "convex/server";
-import * as schemas from "./Schemas";
+import * as schemas from "./schemas";
 
 export default defineSchema({
   users: defineTable(schemas.userSchema).index("by_email", ["email"]),
@@ -29,7 +29,7 @@ export default defineSchema({
   invites: defineTable(schemas.inviteSchema).index("by_sessionId", [
     "sessionId",
   ]),
-  scrappedData: defineTable(schemas.scrappedDataSchema).index("by_sessionId", [
+  scrapedData: defineTable(schemas.scrapedDataSchema).index("by_sessionId", [
     "sessionId",
   ]),
 });
