@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { makePartial } from "../utils/utils";
-import { uploadSchema } from "../Schemas";
+import { uploadSchema } from "../schemas";
 
 // QUERIES
 export const get = query({
@@ -23,7 +23,8 @@ export const getOne = query({
 export const create = mutation({
   args: { item: v.object(uploadSchema) },
   handler: async (ctx, { item }) => {
-    const id = await ctx.db.insert("uploads", item);
+    const newItem = { ...item, createdAt: Date.now() };
+    const id = await ctx.db.insert("uploads", newItem);
     return id;
   },
 });

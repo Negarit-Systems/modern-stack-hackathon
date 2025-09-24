@@ -7,7 +7,7 @@ export const uploadSchema = {
   storageId: v.string(),
   summary: v.optional(v.string()),
   uploadedBy: v.id("users"),
-  createdAt: v.number(),
+  createdAt: v.optional(v.number()),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
 };

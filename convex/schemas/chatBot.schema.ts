@@ -1,12 +1,11 @@
 import { v } from "convex/values";
 
-export const chatbotQuerySchema = {
+export const chatbotSchema = {
   sessionId: v.id("sessions"),
   userId: v.id("users"),
-  query: v.string(),
+  prompt: v.string(),
   response: v.string(),
-  context: v.optional(v.string()),
-  createdAt: v.number(),
+  createdAt: v.optional(v.number()),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
 };

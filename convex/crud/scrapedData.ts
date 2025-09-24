@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { makePartial } from "../utils/utils";
 import { internalMutation } from "../_generated/server";
-import { scrapedDataSchema } from "../Schemas";
+import { scrapedDataSchema } from "../schemas";
 
 // QUERIES
 export const get = query({
@@ -47,7 +47,7 @@ export const deleteOne = mutation({
 });
 
 // INTERNAL FUNCTIONS
-export const internalCreateScrappedData = internalMutation({
+export const internalCreatescrapedData = internalMutation({
   args: { item: v.object(scrapedDataSchema) },
   handler: async (ctx, { item }) => {
     const id = await ctx.db.insert("scrapedData", item);
