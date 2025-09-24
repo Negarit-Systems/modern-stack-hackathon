@@ -1,1 +1,0 @@
-// open ai integration helpers

@@ -17,7 +17,7 @@ export default function Home() {
   const handleCreate = async () => {
     if (firstName.trim() && lastName.trim() && email.trim() && password.trim()) {
       await createUser({
-        user: {
+        item: {
           firstName,
           lastName,
           email,

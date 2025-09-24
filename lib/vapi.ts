@@ -1,1 +1,0 @@
-// VAPI integration helpers if we have voice input. but it optional
