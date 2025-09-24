@@ -23,7 +23,8 @@ export const getOne = query({
 export const create = mutation({
   args: { item: v.object(uploadSchema) },
   handler: async (ctx, { item }) => {
-    const id = await ctx.db.insert("uploads", item);
+    const newItem = { ...item, createdAt: Date.now() };
+    const id = await ctx.db.insert("uploads", newItem);
     return id;
   },
 });

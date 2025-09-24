@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 
-export const scrapedDataSchema = {
+export const scrappedDataSchema = {
   sessionId: v.id("sessions"),
   title: v.string(),
   urls: v.array(v.string()),

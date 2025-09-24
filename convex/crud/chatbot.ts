@@ -1,18 +1,18 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { makePartial } from "../utils/utils";
-import { chatbotQuerySchema } from "../Schemas";
+import { chatbotSchema } from "../Schemas";
 
 // QUERIES
 export const get = query({
   handler: async (ctx) => {
-    const items = await ctx.db.query("chatbotQueries").collect();
+    const items = await ctx.db.query("chatbot").collect();
     return items;
   },
 });
 
 export const getOne = query({
-  args: { id: v.id("chatbotQueries") },
+  args: { id: v.id("chatbot") },
   handler: async (ctx, { id }) => {
     const item = await ctx.db.get(id);
     return item;
@@ -21,17 +21,17 @@ export const getOne = query({
 
 // MUTATIONS
 export const create = mutation({
-  args: { item: v.object(chatbotQuerySchema) },
+  args: { item: v.object(chatbotSchema) },
   handler: async (ctx, { item }) => {
-    const id = await ctx.db.insert("chatbotQueries", item);
+    const id = await ctx.db.insert("chatbot", item);
     return id;
   },
 });
 
 export const update = mutation({
   args: {
-    id: v.id("chatbotQueries"),
-    updates: v.object(makePartial(chatbotQuerySchema)),
+    id: v.id("chatbot"),
+    updates: v.object(makePartial(chatbotSchema)),
   },
   handler: async (ctx, { id, updates }) => {
     await ctx.db.patch(id, updates);
@@ -39,7 +39,7 @@ export const update = mutation({
 });
 
 export const deleteOne = mutation({
-  args: { id: v.id("chatbotQueries") },
+  args: { id: v.id("chatbot") },
   handler: async (ctx, { id }) => {
     await ctx.db.delete(id);
   },

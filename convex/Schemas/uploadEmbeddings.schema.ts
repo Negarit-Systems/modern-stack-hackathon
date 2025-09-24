@@ -1,10 +1,9 @@
 import { v } from "convex/values";
 
-export const chatbotSchema = {
-  sessionId: v.id("sessions"),
-  userId: v.id("users"),
-  prompt: v.string(),
-  response: v.string(),
+export const uploadEmbeddingsSchema = {
+  uploadId: v.id("uploads"),
+  content: v.string(),
+  embedding: v.array(v.float64()),
   createdAt: v.optional(v.number()),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
