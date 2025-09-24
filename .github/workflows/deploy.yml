@@ -2,43 +2,41 @@ name: Deploy Next.js to VPS
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "22"
+          cache: "npm"
           cache-dependency-path: package-lock.json
-
-      - name: Generate Convex types
-        run: npx convex codegen
-
-      - name: Install and build Next.js
-        run: |
-          npm ci
-          npm run build
+      - run: npm ci
+      - run: npx convex codegen
+      - run: npm run build
         env:
-          CI: true
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
 
-      - name: Deploy Next.js to VPS
-        uses: appleboy/ssh-action@v1.0.3
+  deploy:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /var/www/modern-stack-hackathon
-            git reset --hard origin/main
             git pull origin main
             npm ci
             npm run build
-            pm2 restart modern-stack-hackathon-next --update-env || pm2 start npm --name "modern-stack-hackathon-next" -- start
+            pm2 restart modern-stack-hackathon-next --update-env || \
+            pm2 start npm --name "modern-stack-hackathon-next" -- start
