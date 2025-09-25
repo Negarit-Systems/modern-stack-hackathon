@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { mockSessions, mockApiCall, mockSummaries, mockMessages, mockCollaborators } from "@/lib/mockData";
 import InviteModal from "@/components/InviteModal";
-import RichTextEditor from "@/components/RichTextEditor";
+import RichTextEditor from "@/components/canvas/RichTextEditor";
 import Sidebar from "@/components/dashboard/Sidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import ExportModal from "@/components/modals/ExportModal";
