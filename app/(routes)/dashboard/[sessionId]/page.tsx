@@ -2,7 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { mockSessions, mockApiCall, mockSummaries, mockMessages, mockCollaborators } from "@/lib/mockData";
+import {
+  mockSessions,
+  mockApiCall,
+  mockSummaries,
+  mockMessages,
+  mockCollaborators,
+} from "@/lib/mockData";
 import InviteModal from "@/components/InviteModal";
 import RichTextEditor from "@/components/canvas/RichTextEditor";
 import Sidebar from "@/components/dashboard/Sidebar";
@@ -11,60 +17,60 @@ import ExportModal from "@/components/modals/ExportModal";
 import CommentSystem from "@/components/dashboard/CommentSystem";
 
 export default function ResearchDashboard() {
-  const params = useParams()
-  const router = useRouter()
-  const sessionId = (params?.sessionId ?? "") as string
+  const params = useParams();
+  const router = useRouter();
+  const sessionId = (params?.sessionId ?? "") as string;
 
-  const [session, setSession] = useState<any>(null)
-  const [document, setDocument] = useState("")
-  const [summaries, setSummaries] = useState(mockSummaries)
-  const [messages, setMessages] = useState(mockMessages)
-  const [comments, setComments] = useState<any[]>([])
-  const [collaborators, setCollaborators] = useState(mockCollaborators)
-  const [newMessage, setNewMessage] = useState("")
-  const [newComment, setNewComment] = useState("")
-  const [chatbotQuery, setChatbotQuery] = useState("")
-  const [showInviteModal, setShowInviteModal] = useState(false)
-  const [showExportModal, setShowExportModal] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [session, setSession] = useState<any>(null);
+  const [document, setDocument] = useState("");
+  const [summaries, setSummaries] = useState(mockSummaries);
+  const [messages, setMessages] = useState(mockMessages);
+  const [comments, setComments] = useState<any[]>([]);
+  const [collaborators, setCollaborators] = useState(mockCollaborators);
+  const [newMessage, setNewMessage] = useState("");
+  const [newComment, setNewComment] = useState("");
+  const [chatbotQuery, setChatbotQuery] = useState("");
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     // Get user data
-    const userData = localStorage.getItem("user")
+    const userData = localStorage.getItem("user");
     if (userData) {
-      setUser(JSON.parse(userData))
+      setUser(JSON.parse(userData));
     } else {
-      router.push("/")
-      return
+      router.push("/");
+      return;
     }
 
-    let foundSession = null
+    let foundSession = null;
 
     // First check localStorage for user-created sessions
-    const storedSessions = JSON.parse(localStorage.getItem("sessions") || "[]")
-    foundSession = storedSessions.find((s: any) => s.id === sessionId)
+    const storedSessions = JSON.parse(localStorage.getItem("sessions") || "[]");
+    foundSession = storedSessions.find((s: any) => s.id === sessionId);
 
     // If not found in localStorage, check mockSessions
     if (!foundSession) {
-      foundSession = mockSessions.find((s) => s.id === sessionId)
+      foundSession = mockSessions.find((s) => s.id === sessionId);
     }
 
     if (foundSession) {
-      setSession(foundSession)
-      setDocument(foundSession.document)
-      console.log("[v0] Session loaded:", foundSession.topic)
+      setSession(foundSession);
+      setDocument(foundSession.document);
+      console.log("[v0] Session loaded:", foundSession.topic);
     } else {
-      console.log("[v0] Session not found:", sessionId)
+      console.log("[v0] Session not found:", sessionId);
       // Redirect back to homepage if session doesn't exist
-      router.push("/")
-      return
+      router.push("/");
+      return;
     }
 
     // Simulate real-time updates
     const interval = setInterval(() => {
       // Mock real-time sync
-      console.log("[v0] Real-time sync - checking for updates")
+      console.log("[v0] Real-time sync - checking for updates");
 
       // Randomly add a new message every 10 seconds (mock)
       if (Math.random() > 0.8) {
@@ -75,22 +81,24 @@ export default function ResearchDashboard() {
           content: "I found some interesting data on this topic!",
           timestamp: new Date().toISOString(),
           type: "user" as const,
-        }
-        setMessages((prev) => [...prev, newMsg])
+        };
+        setMessages((prev) => [...prev, newMsg]);
       }
-    }, 10000)
+    }, 10000);
 
-    return () => clearInterval(interval)
-  }, [sessionId, router])
+    return () => clearInterval(interval);
+  }, [sessionId, router]);
 
   const handleDocumentChange = (content: string) => {
-    setDocument(content)
-    console.log("[v0] Document updated - syncing with collaborators")
-  }
+    setDocument(content);
+    console.log("[v0] Document updated - syncing with collaborators");
+  };
 
-
-  const handleAddComment = (content: string, position?: { x: number; y: number }) => {
-    if (!content.trim() || !user) return
+  const handleAddComment = (
+    content: string,
+    position?: { x: number; y: number }
+  ) => {
+    if (!content.trim() || !user) return;
 
     const comment = {
       id: Date.now().toString(),
@@ -100,21 +108,21 @@ export default function ResearchDashboard() {
       timestamp: new Date().toISOString(),
       resolved: false,
       position,
-    }
+    };
 
-    setComments((prev) => [...prev, comment])
-  }
+    setComments((prev) => [...prev, comment]);
+  };
 
   const handleResolveComment = (commentId: string) => {
     setComments((prev) =>
       prev.map((comment) =>
         comment.id === commentId ? { ...comment, resolved: true } : comment
       )
-    )
-  }
+    );
+  };
 
   const handleReplyToComment = (commentId: string, content: string) => {
-    if (!content.trim() || !user) return
+    if (!content.trim() || !user) return;
 
     const reply = {
       id: Date.now().toString(),
@@ -123,7 +131,7 @@ export default function ResearchDashboard() {
       content: content,
       timestamp: new Date().toISOString(),
       resolved: false,
-    }
+    };
 
     setComments((prev) =>
       prev.map((comment) =>
@@ -131,15 +139,15 @@ export default function ResearchDashboard() {
           ? { ...comment, replies: [...(comment.replies || []), reply] }
           : comment
       )
-    )
-  }
+    );
+  };
 
   const handleExport = () => {
-    setShowExportModal(true)
-  }
+    setShowExportModal(true);
+  };
 
   const handleSendMessage = (message: string) => {
-    if (!user) return
+    if (!user) return;
 
     const messageObj = {
       id: Date.now().toString(),
@@ -148,16 +156,16 @@ export default function ResearchDashboard() {
       content: message,
       timestamp: new Date().toISOString(),
       type: "user" as const,
-    }
+    };
 
-    setMessages((prev) => [...prev, messageObj])
-  }
+    setMessages((prev) => [...prev, messageObj]);
+  };
 
   const handleChatbotQuery = async (query: string) => {
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const response = await mockApiCall("ai/chat", { message: query })
+      const response = await mockApiCall("ai/chat", { message: query });
 
       const botMessage = {
         id: Date.now().toString(),
@@ -166,22 +174,22 @@ export default function ResearchDashboard() {
         content: response.response,
         timestamp: new Date().toISOString(),
         type: "bot" as const,
-      }
+      };
 
-      setMessages((prev) => [...prev, botMessage])
+      setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      console.error("Chatbot query failed:", error)
+      console.error("Chatbot query failed:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleFileUpload = async (files: FileList) => {
-    setLoading(true)
+    setLoading(true);
 
     try {
       for (const file of Array.from(files)) {
-        console.log("[v0] Processing file:", file.name)
+        console.log("[v0] Processing file:", file.name);
 
         // Mock file processing
         const mockSummary = {
@@ -189,16 +197,16 @@ export default function ResearchDashboard() {
           content: `Summary of ${file.name}: This document contains relevant information about the research topic with key insights and data points.`,
           source: file.name,
           timestamp: new Date().toISOString(),
-        }
+        };
 
-        setSummaries((prev) => [...prev, mockSummary])
+        setSummaries((prev) => [...prev, mockSummary]);
       }
     } catch (error) {
-      console.error("File upload failed:", error)
+      console.error("File upload failed:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (!session) {
     return (
@@ -208,7 +216,7 @@ export default function ResearchDashboard() {
           <p className="text-muted-foreground">Loading research session...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -254,7 +262,11 @@ export default function ResearchDashboard() {
         </div>
       </div>
 
-      <InviteModal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)} sessionId={sessionId} />
+      <InviteModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        sessionId={sessionId}
+      />
       <ExportModal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
@@ -264,5 +276,5 @@ export default function ResearchDashboard() {
         comments={comments}
       />
     </div>
-  )
+  );
 }

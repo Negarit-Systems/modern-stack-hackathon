@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { authClient } from "@/app/lib/auth.client";
 
 interface AuthenticationModalProps {
   isOpen: boolean;
@@ -9,7 +10,11 @@ interface AuthenticationModalProps {
   onAuthenticated: (user: any) => void;
 }
 
-export default function AuthenticationModal({ isOpen, onClose, onAuthenticated }: AuthenticationModalProps) {
+export default function AuthenticationModal({
+  isOpen,
+  onClose,
+  onAuthenticated,
+}: AuthenticationModalProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -20,6 +25,7 @@ export default function AuthenticationModal({ isOpen, onClose, onAuthenticated }
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // const authenticated = authClient.useSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,25 +38,34 @@ export default function AuthenticationModal({ isOpen, onClose, onAuthenticated }
           setError("Passwords do not match");
           return;
         }
-        if (formData.password.length < 6) {
-          setError("Password must be at least 6 characters");
+        if (formData.password.length < 8) {
+          setError("Password must be at least 8 characters");
           return;
         }
+        const res = await authClient.signUp.email({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (res.error) {
+          setError(res.error.message ?? "Signup failed");
+          return;
+        }
+        onAuthenticated(res.data?.user);
+      } else {
+        const res = await authClient.signIn.email({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (res.error) {
+          setError(res.error.message ?? "Login failed");
+          return;
+        }
+        onAuthenticated(res.data?.user);
       }
-
-      // Mock authentication
-      const user = {
-        id: Date.now().toString(),
-        name: formData.name || formData.email.split("@")[0],
-        email: formData.email,
-        avatar: null,
-      };
-
-      localStorage.setItem("user", JSON.stringify(user));
-      onAuthenticated(user);
       onClose();
-      
-      // Reset form
       setFormData({ name: "", email: "", password: "", confirmPassword: "" });
     } catch (err: any) {
       setError(err.message || "Authentication failed");
@@ -79,7 +94,9 @@ export default function AuthenticationModal({ isOpen, onClose, onAuthenticated }
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {isSignUp && (
             <div>
-              <label className="block text-sm font-medium mb-2">Full Name</label>
+              <label className="block text-sm font-medium mb-2">
+                Full Name
+              </label>
               <div className="relative">
                 <User
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
@@ -88,7 +105,9 @@ export default function AuthenticationModal({ isOpen, onClose, onAuthenticated }
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="w-full pl-10 pr-4 py-3 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="Enter your full name"
                   required={isSignUp}
@@ -107,7 +126,9 @@ export default function AuthenticationModal({ isOpen, onClose, onAuthenticated }
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 className="w-full pl-10 pr-4 py-3 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Enter your email"
                 required
@@ -125,7 +146,9 @@ export default function AuthenticationModal({ isOpen, onClose, onAuthenticated }
               <input
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 className="w-full pl-10 pr-12 py-3 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Enter your password"
                 required
@@ -142,7 +165,9 @@ export default function AuthenticationModal({ isOpen, onClose, onAuthenticated }
 
           {isSignUp && (
             <div>
-              <label className="block text-sm font-medium mb-2">Confirm Password</label>
+              <label className="block text-sm font-medium mb-2">
+                Confirm Password
+              </label>
               <div className="relative">
                 <Lock
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
@@ -151,7 +176,12 @@ export default function AuthenticationModal({ isOpen, onClose, onAuthenticated }
                 <input
                   type="password"
                   value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      confirmPassword: e.target.value,
+                    })
+                  }
                   className="w-full pl-10 pr-4 py-3 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="Confirm your password"
                   required={isSignUp}
@@ -176,8 +206,10 @@ export default function AuthenticationModal({ isOpen, onClose, onAuthenticated }
                 <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
                 {isSignUp ? "Creating Account..." : "Signing In..."}
               </div>
+            ) : isSignUp ? (
+              "Create Account"
             ) : (
-              isSignUp ? "Create Account" : "Sign In"
+              "Sign In"
             )}
           </button>
 
@@ -187,7 +219,9 @@ export default function AuthenticationModal({ isOpen, onClose, onAuthenticated }
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-sm text-primary hover:underline"
             >
-              {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
+              {isSignUp
+                ? "Already have an account? Sign in"
+                : "Don't have an account? Sign up"}
             </button>
           </div>
         </form>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import HeroSection from "@/components/homepage/HeroSection";
 import ResearchForm from "@/components/homepage/ResearchForm";
 import RecentSessions from "@/components/homepage/RecentSessions";
+import DashboardPage from "@/components/dashboard/TestDb";
 
 export default function HomePage() {
   const [user, setUser] = useState<any>(null);
@@ -25,7 +26,7 @@ export default function HomePage() {
     };
 
     window.addEventListener("storage", handleStorageChange);
-    
+
     // Custom event for same-page authentication updates
     window.addEventListener("userAuthenticated", handleStorageChange);
 

@@ -32,4 +32,5 @@ export default defineSchema({
   scrapedData: defineTable(schemas.scrapedDataSchema).index("by_sessionId", [
     "sessionId",
   ]),
+  testSchema: defineTable(schemas.testSchema),
 });
