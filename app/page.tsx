@@ -3,8 +3,6 @@
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState } from "react";
-import SignupForm from "./auth/register/page";
-import LoginForm from "./auth/login/page";
 
 export default function Home() {
   const users = useQuery(api.crud.users.get) || [];
@@ -42,9 +40,11 @@ export default function Home() {
   };
 
   return (
-    <LoginForm />
+    <h1> Hello landing page</h1>
     // <main className="p-4">
-    //   <h1 className="text-2xl font-bold mb-4">Hello from User App with Convex</h1>
+    //   <h1 className="text-2xl font-bold mb-4">
+    //     Hello from User App with Convex
+    //   </h1>
 
     //   {/* Create Form */}
     //   <div className="mb-4 flex flex-col gap-2 max-w-sm">

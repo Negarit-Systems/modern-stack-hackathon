@@ -11,7 +11,7 @@ export function makePartial(fields: Record<string, any>) {
   return partial;
 }
 
-export const isAuthenticated = async (ctx: GenericCtx) => {
+export const authenticatedUser = async (ctx: GenericCtx) => {
   const auth = await authComponent.getAuthUser(ctx);
-  return !!auth._id;
+  return auth._id;
 };

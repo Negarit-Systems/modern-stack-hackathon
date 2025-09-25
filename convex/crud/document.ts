@@ -1,13 +1,15 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
-import { makePartial } from "../utils/utils";
+import { authenticatedUser, makePartial } from "../utils/utils";
 import { documentSchema } from "../schemas";
 
 // QUERIES
 export const get = query({
   handler: async (ctx) => {
+    // const user = await authenticatedUser(ctx);
+    // if (!user) throw new Error("Not authenticated");
     const items = await ctx.db.query("documents").collect();
-    return items;
+    return items ?? [];
   },
 });
 
