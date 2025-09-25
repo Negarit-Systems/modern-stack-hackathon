@@ -14,11 +14,21 @@ export default function Header() {
 
   useEffect(() => {
     // Check for logged in user
-    const userData = localStorage.getItem("user")
+    const userData = localStorage.getItem("user");
     if (userData) {
-      setUser(JSON.parse(userData))
+      setUser(JSON.parse(userData));
     }
-  }, [])
+
+    // Check for saved theme
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+      setDarkMode(true);
+    } else {
+      document.documentElement.classList.remove("dark");
+      setDarkMode(false);
+    }
+  }, []);
 
   const handleLogout = () => {
     setShowLogoutModal(true);
@@ -37,10 +47,16 @@ export default function Header() {
   }
 
   const toggleDarkMode = () => {
-    setDarkMode(!darkMode)
-    // In a real app, this would update the theme
-    console.log("[v0] Dark mode toggled:", !darkMode)
-  }
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    if (newDarkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  };
 
   return (
     <>

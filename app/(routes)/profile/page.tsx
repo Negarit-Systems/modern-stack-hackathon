@@ -241,7 +241,7 @@ export default function ProfilePage() {
                             </div>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            {session.collaborators.slice(0, 3).map((email, index) => (
+                            {session.collaborators.slice(0, 3).map((email: string, index: number) => (
                               <span
                                 key={index}
                                 className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded"
