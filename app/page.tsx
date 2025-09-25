@@ -1,97 +1,45 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import HeroSection from "@/components/homepage/HeroSection";
+import ResearchForm from "@/components/homepage/ResearchForm";
+import RecentSessions from "@/components/homepage/RecentSessions";
 
-export default function Home() {
-  const users = useQuery(api.crud.users.get) || [];
-  const createUser = useMutation(api.crud.users.create);
-  const deleteUser = useMutation(api.crud.users.deleteOne);
+export default function HomePage() {
+  const [user, setUser] = useState<any>(null);
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleCreate = async () => {
-    if (firstName.trim() && lastName.trim() && email.trim() && password.trim()) {
-      await createUser({
-        user: {
-          firstName,
-          lastName,
-          email,
-          password,
-          createdAt: Date.now(),
-        },
-      });
-
-      // reset form
-      setFirstName("");
-      setLastName("");
-      setEmail("");
-      setPassword("");
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      setUser(JSON.parse(userData));
     }
-  };
+
+    // Listen for user changes from header authentication
+    const handleStorageChange = () => {
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        setUser(JSON.parse(userData));
+      } else {
+        setUser(null);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Custom event for same-page authentication updates
+    window.addEventListener("userAuthenticated", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("userAuthenticated", handleStorageChange);
+    };
+  }, []);
 
   return (
-    <main className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Hello from User App with Convex</h1>
-
-      {/* Create Form */}
-      <div className="mb-4 flex flex-col gap-2 max-w-sm">
-        <input
-          type="text"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          className="border p-2"
-          placeholder="First name"
-        />
-        <input
-          type="text"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          className="border p-2"
-          placeholder="Last name"
-        />
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="border p-2"
-          placeholder="Email"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="border p-2"
-          placeholder="Password"
-        />
-        <button
-          onClick={handleCreate}
-          className="bg-blue-500 text-white p-2 rounded"
-        >
-          Add User
-        </button>
-      </div>
-
-      {/* User List */}
-      <ul>
-        {users.map((user) => (
-          <li key={user._id} className="flex items-center mb-2">
-            <span>
-              {user.firstName} {user.lastName} ({user.email})
-            </span>
-            <button
-              onClick={() => deleteUser({ id: user._id })}
-              className="ml-auto bg-red-500 text-white p-1 rounded"
-            >
-              Delete
-            </button>
-          </li>
-        ))}
-      </ul>
-    </main>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <HeroSection />
+      <ResearchForm user={user} />
+      <RecentSessions user={user} />
+    </div>
   );
 }
