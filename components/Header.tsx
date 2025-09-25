@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { User, LogOut, Moon, Sun } from "lucide-react"
-import AuthenticationModal from "./auth/AuthenticationModal"
+import AuthenticationModal from "./auth/AuthenticationModal";
+import ConfirmationModal from "./modals/ConfirmationModal";
 
 export default function Header() {
   const [user, setUser] = useState<any>(null)
   const [darkMode, setDarkMode] = useState(false)
-  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     // Check for logged in user
@@ -19,10 +21,14 @@ export default function Header() {
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem("user")
-    setUser(null)
-    window.location.href = "/"
-  }
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    window.location.href = "/";
+  };
 
   const handleAuthSuccess = (userData: any) => {
     setUser(userData)
@@ -90,6 +96,13 @@ export default function Header() {
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 
         onAuthenticated={handleAuthSuccess} 
+      />
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+        title="Confirm Logout"
+        message="Are you sure you want to log out?"
       />
     </>
   )

@@ -53,7 +53,7 @@ export default function ExportModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-card border border-border rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div className="bg-card border border-border rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <FileText size={20} />
@@ -69,7 +69,7 @@ export default function ExportModal({
 
         <div className="flex h-[calc(90vh-120px)]">
           {/* Export Options */}
-          <div className="w-1/3 p-6 border-r border-border">
+          <div className="w-1/4 p-6 border-r border-border">
             <h3 className="font-semibold mb-4">Export Options</h3>
             
             <div className="space-y-4">
