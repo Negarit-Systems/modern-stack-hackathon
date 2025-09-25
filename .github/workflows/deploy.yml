@@ -18,6 +18,8 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci
       - run: npx convex codegen
+        env:
+          CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }} 
       - run: npm run build
         env:
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
