@@ -1,50 +1,31 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { User, LogOut, Moon, Sun } from "lucide-react"
+import { useState } from "react";
+import Link from "next/link";
+import { User, LogOut, Moon, Sun } from "lucide-react";
 import AuthenticationModal from "./auth/AuthenticationModal";
 import ConfirmationModal from "./modals/ConfirmationModal";
+import { authClient } from "@/app/lib/auth.client";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
-  const [user, setUser] = useState<any>(null)
-  const [darkMode, setDarkMode] = useState(false)
+  const [darkMode, setDarkMode] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const router = useRouter();
 
-  useEffect(() => {
-    // Check for logged in user
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      setUser(JSON.parse(userData));
+  const authenticatedUser = authClient.useSession();
+  const user = authenticatedUser?.data?.user || null;
+
+  const confirmLogout = async () => {
+    try {
+      await authClient.signOut();
+      setShowLogoutModal(false);
+      router.push("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
     }
-
-    // Check for saved theme
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      document.documentElement.classList.add("dark");
-      setDarkMode(true);
-    } else {
-      document.documentElement.classList.remove("dark");
-      setDarkMode(false);
-    }
-  }, []);
-
-  const handleLogout = () => {
-    setShowLogoutModal(true);
   };
-
-  const confirmLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-    window.location.href = "/";
-  };
-
-  const handleAuthSuccess = (userData: any) => {
-    setUser(userData)
-    // Dispatch custom event to notify other components
-    window.dispatchEvent(new Event("userAuthenticated"))
-  }
 
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
@@ -77,7 +58,7 @@ export default function Header() {
                   {user.name}
                 </Link>
                 <button
-                  onClick={handleLogout}
+                  onClick={() => setShowLogoutModal(true)}
                   className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <LogOut size={20} />
@@ -101,17 +82,20 @@ export default function Header() {
               </div>
             )}
 
-            <button onClick={toggleDarkMode} className="p-2 rounded-md hover:bg-accent transition-colors">
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-md hover:bg-accent transition-colors"
+            >
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
           </nav>
         </div>
       </header>
 
-      <AuthenticationModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-        onAuthenticated={handleAuthSuccess} 
+      <AuthenticationModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuthenticated={() => {}}
       />
       <ConfirmationModal
         isOpen={showLogoutModal}
@@ -121,5 +105,5 @@ export default function Header() {
         message="Are you sure you want to log out?"
       />
     </>
-  )
+  );
 }
