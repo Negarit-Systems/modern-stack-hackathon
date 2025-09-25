@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { authClient } from "@/convex/lib/auth.client";
+import { authClient } from "@/app/lib/auth.client";
 
 export default function SignupForm() {
   const [name, setName] = useState("");

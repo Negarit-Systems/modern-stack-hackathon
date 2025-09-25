@@ -20,6 +20,6 @@
     "isolatedModules": true,
     "noEmit": true
   },
-  "include": ["./**/*"],
+  "include": ["./**/*", "../app/lib/auth.client.ts"],
   "exclude": ["./_generated"]
 }
