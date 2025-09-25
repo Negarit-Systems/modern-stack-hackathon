@@ -1,4 +1,60 @@
-import type { User, Session, Summary, Message, Comment, Collaborator } from "../types"
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+}
+
+interface Session {
+  id: string;
+  topic: string;
+  date: string;
+  collaborators: string[];
+  summaries: Summary[];
+  document: string;
+  messages: Message[];
+  comments: Comment[];
+}
+
+interface Summary {
+  id: string;
+  content: string;
+  source: string;
+  timestamp: string;
+}
+
+
+interface Message {
+  id: string;
+  userId: string;
+  userName: string;
+  content: string;
+  timestamp: string;
+  type: "user" | "bot";
+}
+
+
+interface Comment {
+  id: string;
+  userId: string;
+  userName: string;
+  content: string;
+  timestamp: string;
+  resolved: boolean;
+  summaryId: string;
+}
+
+interface Collaborator {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  avatar: string;
+}
+
+
 
 export const mockUsers: User[] = [
   {
