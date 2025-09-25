@@ -4,9 +4,7 @@ import * as schemas from "./schemas";
 export default defineSchema({
   users: defineTable(schemas.userSchema).index("by_email", ["email"]),
   sessions: defineTable(schemas.sessionSchema),
-  documents: defineTable(schemas.documentSchema).index("by_sessionId", [
-    "sessionId",
-  ]),
+  documents: defineTable(schemas.documentSchema),
   uploads: defineTable(schemas.uploadSchema).index("by_sessionId", [
     "sessionId",
   ]),
