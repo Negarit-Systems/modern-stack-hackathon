@@ -2,7 +2,6 @@ import { defineSchema, defineTable } from "convex/server";
 import * as schemas from "./schemas";
 
 export default defineSchema({
-  users: defineTable(schemas.userSchema).index("by_email", ["email"]),
   sessions: defineTable(schemas.sessionSchema),
   documents: defineTable(schemas.documentSchema).index("by_sessionId", [
     "sessionId",
@@ -14,14 +13,16 @@ export default defineSchema({
     "by_embedding",
     {
       vectorField: "embedding",
+      filterFields: ["sessionId"],
       dimensions: 768,
     }
   ),
   groupChats: defineTable(schemas.groupChatSchema).index("by_sessionId", [
     "sessionId",
   ]),
-  chatbot: defineTable(schemas.chatbotSchema).index("by_sessionId", [
+  chatbot: defineTable(schemas.chatbotSchema).index("by_session_and_user", [
     "sessionId",
+    "userId",
   ]),
   comments: defineTable(schemas.commentSchema).index("by_sessionId", [
     "sessionId",

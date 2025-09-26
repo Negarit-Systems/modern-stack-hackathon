@@ -6,15 +6,15 @@ import AIAssistant from "./sidebar/AIAssistant";
 import TeamChat from "./sidebar/TeamChat";
 import CollaboratorsList from "./sidebar/CollaboratorsList";
 import RecentInsights from "./sidebar/RecentInsights";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface SidebarProps {
   session: any;
   messages: any[];
   collaborators: any[];
-  summaries: any[];
   user: any;
   onSendMessage: (message: string) => void;
-  onChatbotQuery: (query: string) => void;
+  onChatbotQuery: (sessionId: Id<"sessions">, prompt: string) => void;
   onFileUpload: (files: FileList) => void;
   loading: boolean;
 }
@@ -23,7 +23,6 @@ export default function Sidebar({
   session,
   messages,
   collaborators,
-  summaries,
   user,
   onSendMessage,
   onChatbotQuery,
@@ -34,7 +33,7 @@ export default function Sidebar({
 
   return (
     <div
-      className={`${collapsed ? "w-16" : "w-80"} transition-all duration-300 border-r border-border bg-card flex flex-col`}
+      className={`${collapsed ? "w-16" : "w-120"} transition-all duration-300 border-r border-border bg-card flex flex-col`}
     >
       {/* Sidebar Header */}
       <div className="p-4 border-b border-border">
@@ -57,10 +56,12 @@ export default function Sidebar({
       {/* Sidebar Content */}
       {!collapsed && (
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <AIAssistant onQuery={onChatbotQuery} loading={loading} />
+          <AIAssistant onQuery={onChatbotQuery} session={session} loading={loading} />
           <TeamChat messages={messages} onSendMessage={onSendMessage} user={user} />
           <CollaboratorsList collaborators={collaborators} />
-          <RecentInsights summaries={summaries} onFileUpload={onFileUpload} />
+          <RecentInsights
+            sessionId={session?._id}
+          />
         </div>
       )}
     </div>

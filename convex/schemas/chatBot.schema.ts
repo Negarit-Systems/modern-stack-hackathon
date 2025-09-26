@@ -2,7 +2,7 @@ import { v } from "convex/values";
 
 export const chatbotSchema = {
   sessionId: v.id("sessions"),
-  userId: v.id("users"),
+  userId: v.string(),
   prompt: v.string(),
   response: v.string(),
   createdAt: v.optional(v.number()),

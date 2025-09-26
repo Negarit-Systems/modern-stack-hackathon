@@ -25,8 +25,8 @@ const geminiAdapter: AiProvider = {
     return response.text() || "No response from Gemini.";
   },
 
-  generateEmbedding: async (text: string): Promise<number[]> => {
-    console.log("Gemini API: Generating embedding...");
+  generateEmbeddings: async (texts: string[]): Promise<number[][]> => {
+    console.log("Gemini API: Generating embeddings for a batch...");
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw new Error("GEMINI_API_KEY not found in environment variables");
@@ -35,11 +35,27 @@ const geminiAdapter: AiProvider = {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: GEMINI_EMBEDDING_MODEL });
 
-    const result = await model.embedContent(text);
-    return result.embedding.values || [];
+    // Convert the array of strings to the required format for batchEmbedContents
+    const requests = texts.map((text) => ({
+      content: {
+        role: "user",
+        parts: [{ text }]
+      }
+    }));
+
+    try {
+      const result = await model.batchEmbedContents({ requests });
+
+      // The result contains an array of embedding objects
+      // Extract the 'values' array from each embedding object
+      return result.embeddings.map(embedding => embedding.values || []);
+    } catch (error) {
+      console.error("Error generating embeddings:", error);
+      throw error;
+    }
   },
 
-  callFunction: async (prompt: string, functions: any[]): Promise<any> => {
+  callFunction: async (prompt: string, functions: any[], context?: string): Promise<any> => {
     console.log("Gemini API: Calling function...");
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -52,8 +68,12 @@ const geminiAdapter: AiProvider = {
       tools: functions,
     });
 
+    const fullPrompt = context
+      ? `Based on this context: ${context}\n\nUser's question: ${prompt}`
+      : prompt;
+
     const chat = model.startChat();
-    const result = await chat.sendMessage(prompt);
+    const result = await chat.sendMessage(fullPrompt);
     const response = result.response;
 
     const toolCall = response.functionCalls();
@@ -62,6 +82,7 @@ const geminiAdapter: AiProvider = {
     }
     return response;
   },
+
 };
 
 export { geminiAdapter };

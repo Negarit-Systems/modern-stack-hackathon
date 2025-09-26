@@ -19,6 +19,18 @@ export const getOne = query({
   },
 });
 
+export const getCollaborators = query({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, { sessionId }) => {
+    const session = await ctx.db.get(sessionId);
+    if (!session) {
+      throw new Error("Session not found");
+    }
+
+    return session.collaboratorIds;
+  }
+});
+
 // MUTATIONS
 export const create = mutation({
   args: { item: v.object(sessionSchema) },

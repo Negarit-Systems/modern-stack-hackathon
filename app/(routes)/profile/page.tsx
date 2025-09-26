@@ -5,12 +5,17 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { User, Mail, Settings, Calendar, Eye, Share, Trash2, BarChart3, LogOut } from "lucide-react"
-import { mockSessions } from "@/lib/mockData"
 
 export default function ProfilePage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
-  const [sessions, setSessions] = useState(mockSessions)
+  type Session = {
+    id: string
+    topic: string
+    date: string
+    collaborators: string[]
+  }
+  const [sessions, setSessions] = useState<Session[] | null>(null)
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
@@ -65,16 +70,9 @@ export default function ProfilePage() {
   }
 
   const handleShareSession = (session: any) => {
-    // Mock sharing functionality
-    console.log("[v0] Sharing session:", session.id)
-    const shareUrl = `${window.location.origin}/dashboard/${session.id}`
-    navigator.clipboard.writeText(shareUrl)
-    alert("Session link copied to clipboard!")
-  }
-
   const handleDeleteSession = (sessionId: string) => {
     if (confirm("Are you sure you want to delete this session?")) {
-      setSessions((prev) => prev.filter((s) => s.id !== sessionId))
+      setSessions((prev) => prev ? prev.filter((s: Session) => s.id !== sessionId) : prev)
       console.log("[v0] Session deleted:", sessionId)
     }
   }
@@ -117,7 +115,7 @@ export default function ProfilePage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Total Sessions</span>
-                    <span className="font-semibold">{sessions.length}</span>
+                    <span className="font-semibold">{sessions?.length ?? 0}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">This Month</span>
@@ -225,7 +223,7 @@ export default function ProfilePage() {
                 </h3>
 
                 <div className="space-y-4">
-                  {sessions.map((session) => (
+                  {sessions?.map((session) => (
                     <div key={session.id} className="border border-border rounded-lg p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
@@ -291,4 +289,4 @@ export default function ProfilePage() {
       </div>
     </div>
   )
-}
+  }}

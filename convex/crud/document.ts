@@ -11,6 +11,17 @@ export const get = query({
   },
 });
 
+export const getBySession = query({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, { sessionId }) => {
+    const item = await ctx.db
+      .query("documents")
+      .withIndex("by_sessionId", (q) => q.eq("sessionId", sessionId))
+      .first();
+    return item;
+  },
+});
+
 export const getOne = query({
   args: { id: v.id("documents") },
   handler: async (ctx, { id }) => {

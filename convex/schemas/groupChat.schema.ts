@@ -4,9 +4,9 @@ export const groupChatSchema = {
   sessionId: v.id("sessions"),
   messages: v.array(
     v.object({
-      userId: v.id("users"),
+      userId: v.string(),
       content: v.string(),
-      mentions: v.array(v.id("users")),
+      mentions: v.array(v.string()),
       createdAt: v.number(),
     })
   ),
