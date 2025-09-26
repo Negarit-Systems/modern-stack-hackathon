@@ -1,4 +1,4 @@
-name: Hackathon Project Deployment
+name: Hackathon Deployment
 
 on:
   push:
@@ -8,26 +8,42 @@ on:
 
 jobs:
   build:
+    name: Build Next.js Project
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Setup Node.js with caching
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: package-lock.json
-      - run: npm ci
-      - run: npx convex codegen
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Convex codegen
+        run: npx convex codegen
         env:
           CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
-      - run: npm run build
+          CONVEX_AUTH_TOKEN: ${{ secrets.CONVEX_AUTH_TOKEN }}
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+
+      - name: Build project
+        run: npm run build
         env:
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
 
   deploy:
+    name: Deploy to VPS
     needs: build
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+
     steps:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.2.0
