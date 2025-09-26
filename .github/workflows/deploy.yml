@@ -59,9 +59,6 @@ jobs:
             # Stop the current application
             pm2 stop modern-stack-hackathon-next || true
 
-            # Backup current deployment
-            tar -czf backup_$(date +%Y%m%d_%H%M%S).tar.gz . || true
-
             # Extract new deployment
             tar -xzf deployment.tar.gz
             cp -r deployment/* .
@@ -71,10 +68,7 @@ jobs:
             npm ci --only=production
 
             # Start the application
-            pm2 start npm --name "modern-stack-hackathon-next" -- start
+            pm2 restart start npm --name "modern-stack-hackathon-next" -- start
 
             # Save PM2 configuration
             pm2 save
-
-            # Cleanup old backups (keep last 5)
-            ls -t backup_*.tar.gz | tail -n +6 | xargs rm -f || true
