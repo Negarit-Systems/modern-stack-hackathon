@@ -4,7 +4,7 @@ import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 
 interface UserPresenceProps {
-  currentUserId: Id<"user">;
+  currentUserId: string;
   sessionId: Id<"sessions">;
 }
 

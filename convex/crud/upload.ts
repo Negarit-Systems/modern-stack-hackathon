@@ -11,6 +11,17 @@ export const get = query({
   },
 });
 
+export const getBySession = query({
+  args: { sessionId: v.string() },
+  handler: async (ctx, { sessionId }) => {
+    const items = await ctx.db
+      .query("uploads")
+      .filter((q) => q.eq(q.field("sessionId"), sessionId))
+      .collect();
+    return items;
+  },
+});
+
 export const getOne = query({
   args: { id: v.id("uploads") },
   handler: async (ctx, { id }) => {
@@ -49,5 +60,11 @@ export const deleteOne = mutation({
   args: { id: v.id("uploads") },
   handler: async (ctx, { id }) => {
     await ctx.db.delete(id);
+  },
+});
+
+export const generateUploadUrl = mutation({
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
   },
 });

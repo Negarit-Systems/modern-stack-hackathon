@@ -8,7 +8,7 @@ import { api } from "@/convex/_generated/api";
 import ReactMarkdown from "react-markdown";
 
 interface AIAssistantProps {
-  onQuery: (sessionId: Id<"sessions">, prompt: string) => Promise<string>;
+  onQuery: (sessionId: Id<"sessions">, prompt: string) => void;
   session: any;
   loading?: boolean;
 }
@@ -52,15 +52,7 @@ export default function AIAssistant({ onQuery, session, loading }: AIAssistantPr
     setQuery("");
 
     try {
-      const botResponse = await onQuery(session._id, query);
-
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === userMessage.id
-            ? { ...msg, response: botResponse, pending: false }
-            : msg
-        )
-      );
+      onQuery(session._id, query);
     } catch (err) {
       setMessages((prev) =>
         prev.map((msg) =>

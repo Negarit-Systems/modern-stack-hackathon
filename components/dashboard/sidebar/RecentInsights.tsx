@@ -97,14 +97,14 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
           className="mt-4 w-full px-3 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center"
           disabled={parseLoading}
           onClick={async () => {
-            if (uploads && uploads.length > 0) {
-              setParseLoading(true);
-              try {
-          await parseText({ sessionId });
-              } finally {
-          setParseLoading(false);
-              }
+            setParseLoading(true);
+            try {
+              await parseText({ sessionId });
             }
+            catch (error) {
+              console.error("Error parsing files:", error);
+            }
+            setParseLoading(false);
           }}
         >
           {parseLoading ? (

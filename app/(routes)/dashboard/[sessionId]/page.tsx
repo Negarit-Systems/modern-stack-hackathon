@@ -20,9 +20,7 @@ export default function ResearchDashboard() {
   // Queries
   const session = useQuery(api.crud.session.getOne, { id: sessionId });
   const document = useQuery(api.crud.document.getBySession, { sessionId });
-  const createDocument = useMutation(api.crud.document.create);
   const updateDocument = useMutation(api.crud.document.update);
-  const getChatbotHistory = useQuery(api.crud.chatbot.get, { sessionId });
   // const collaborators = useQuery(api.crud.session.getCollaborators, { sessionId });
 
   // Actions
