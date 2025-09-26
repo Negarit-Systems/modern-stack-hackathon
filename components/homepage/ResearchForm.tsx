@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Filter, Users, ArrowRight } from "lucide-react";
-import { mockApiCall } from "@/lib/mockData";
 
 interface ResearchFormProps {
   user: any;
@@ -34,47 +33,6 @@ export default function ResearchForm({ user }: ResearchFormProps) {
 
     setLoading(true);
     setError("");
-
-    try {
-      // Mock session creation
-      const response = await mockApiCall("sessions/create", {
-        topic: formData.topic,
-        filter: formData.filter,
-        collaborators: formData.collaborators
-          .split(",")
-          .map((email) => email.trim())
-          .filter(Boolean),
-      });
-
-      if (response.success) {
-        // Store session data
-        const newSession = {
-          id: response.sessionId,
-          topic: formData.topic,
-          date: new Date().toISOString().split("T")[0],
-          collaborators: formData.collaborators
-            .split(",")
-            .map((email) => email.trim())
-            .filter(Boolean),
-          summaries: [],
-          document: `Research session for: ${formData.topic}`,
-          messages: [],
-          comments: [],
-        };
-
-        // Add to existing sessions in localStorage
-        const existingSessions = JSON.parse(localStorage.getItem("sessions") || "[]");
-        existingSessions.unshift(newSession);
-        localStorage.setItem("sessions", JSON.stringify(existingSessions));
-
-        // Redirect to dashboard
-        router.push(`/dashboard/${response.sessionId}`);
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to create research session");
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (

@@ -27,7 +27,7 @@ const gptAdapter: AiProvider = {
     return response.choices[0].message?.content || "No response from GPT.";
   },
 
-  generateEmbedding: async (text: string): Promise<number[]> => {
+  generateEmbeddings: async (texts: string[]): Promise<number[][]> => {
     console.log("GPT API: Generating embedding...");
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -38,10 +38,10 @@ const gptAdapter: AiProvider = {
 
     const response = await client.embeddings.create({
       model: GPT_EMBEDDING_MODEL,
-      input: text,
+      input: texts,
     });
 
-    return response.data[0].embedding;
+    return response.data.map((item: any) => item.embedding);
   },
 
   callFunction: async (prompt: string, functions: any[]): Promise<any> => {

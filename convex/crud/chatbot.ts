@@ -1,12 +1,22 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
-import { makePartial } from "../utils/utils";
+import { authenticatedUser, makePartial } from "../utils/utils";
 import { chatbotSchema } from "../schemas";
 
 // QUERIES
 export const get = query({
-  handler: async (ctx) => {
-    const items = await ctx.db.query("chatbot").collect();
+  args: {
+    sessionId: v.id("sessions"),
+  },
+  handler: async (ctx, { sessionId }) => {
+    const userId = await authenticatedUser(ctx);
+    const items = await ctx.db
+      .query("chatbot")
+      .withIndex("by_session_and_user", (q: any) =>
+        q.eq("sessionId", sessionId).eq("userId", userId)
+      )
+      .collect();
+
     return items;
   },
 });

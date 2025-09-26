@@ -3,8 +3,8 @@ import { gptAdapter } from "./gptAdapter";
 
 export interface AiProvider {
   generateText: (prompt: string, context?: string) => Promise<string>;
-  generateEmbedding: (text: string) => Promise<number[]>;
-  callFunction: (prompt: string, functions: any[]) => Promise<any>;
+  generateEmbeddings: (texts: string[]) => Promise<number[][]>;
+  callFunction: (prompt: string, functions: any[], context: string) => Promise<any>;
 }
 
 // Configuration to select the active provider

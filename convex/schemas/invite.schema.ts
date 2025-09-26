@@ -10,7 +10,7 @@ export const inviteSchema = {
     v.literal("CANCELLED"),
     v.literal("EXPIRED")
   ),
-  invitedBy: v.id("users"),
+  invitedBy: v.string(),
   createdAt: v.number(),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),

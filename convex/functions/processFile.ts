@@ -6,7 +6,7 @@ export const processFile = action({
   args: {
     sessionId: v.id("sessions"),
     fileName: v.string(),
-    storageId: v.string(),
+    storageId: v.id("_storage"),
     fileContent: v.string(),
     uploadedBy: v.id("users"),
     fileType: v.string(),
@@ -17,19 +17,18 @@ export const processFile = action({
     });
 
     const chunks = fileContent.match(/.{1,500}/g) || [];
-    const uploadChunks = [];
 
-    for (const chunk of chunks) {
-      const embedding = await ctx.runAction(api.ai.ai.generateEmbedding, {
-        text: chunk,
-      });
+    const embeddings = await ctx.runAction(api.ai.ai.generateEmbeddings, {
+      texts: chunks,
+    });
 
-      uploadChunks.push({
-        uploadId,
-        content: chunk,
-        embedding,
-      });
-    }
+    const uploadChunks = chunks.map((chunk, idx) => ({
+      uploadId,
+      sessionId: data.sessionId,
+      content: chunk,
+      embedding: embeddings[idx],
+    }));
+
     await ctx.runMutation(api.crud.uploadEmbedding.bulkCreate, {
       items: uploadChunks,
     });
