@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { authClient } from "@/app/lib/auth.client";
+import { Github } from "lucide-react";
 
 interface AuthenticationModalProps {
   isOpen: boolean;
@@ -25,7 +26,25 @@ export default function AuthenticationModal({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  // const authenticated = authClient.useSession();
+
+  const handleAuthSubmit = async () => {
+    const user = await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/dashboard",
+      errorCallbackURL: "/error",
+      newUserCallbackURL: "/dashboard",
+      disableRedirect: false,
+    });
+
+    if (user.error) {
+      setError(user.error.message ?? "Signup failed");
+      return;
+    }
+    onAuthenticated(user);
+
+    onClose();
+    setFormData({ name: "", email: "", password: "", confirmPassword: "" });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +71,7 @@ export default function AuthenticationModal({
           setError(res.error.message ?? "Signup failed");
           return;
         }
+
         onAuthenticated(res.data?.user);
       } else {
         const res = await authClient.signIn.email({
@@ -195,6 +215,18 @@ export default function AuthenticationModal({
               {error}
             </div>
           )}
+          <div>
+            <button
+              type="button"
+              onClick={handleAuthSubmit}
+              className="w-full flex items-center justify-center gap-2 border border-border py-3 px-6 rounded-md hover:bg-accent transition-colors mb-2"
+            >
+              <span>
+                <Github className="w-4 h-4" />
+              </span>
+              Sign in with Google
+            </button>
+          </div>
 
           <button
             type="submit"
