@@ -14,11 +14,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup Node.js with caching
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "20"
           cache: "npm"
           cache-dependency-path: package-lock.json
 
@@ -26,16 +25,33 @@ jobs:
         run: npm ci
 
       - name: Run Convex codegen
-        run: npx convex codegen
+        run: |
+          echo "CONVEX_TOKEN=${{ secrets.CONVEX_ACCESS_TOKEN }}" >> $GITHUB_ENV
+          npx convex codegen
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-          CONVEX_DEPLOYMENT: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+          CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
 
       - name: Build project
         run: npm run build
         env:
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+          CONVEX_TOKEN: ${{ secrets.CONVEX_ACCESS_TOKEN }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: |
+            .next/
+            package.json
+            package-lock.json
+            public/
+            next.config.js
+            tsconfig.json
+            convex/
+          retention-days: 1
 
   deploy:
     name: Deploy to VPS
@@ -43,16 +59,31 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to VPS
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: ./next-build
+
+      - name: Copy files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "./next-build/*"
+          target: "/var/www/modern-stack-hackathon"
+          strip_components: 1
+
+      - name: Restart app with PM2
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            export NEXT_PUBLIC_CONVEX_URL=${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
             cd /var/www/modern-stack-hackathon
-            git pull origin main
-            npm ci
-            npm run build
+            npm ci --only=production
             pm2 restart modern-stack-hackathon-next --update-env || \
             pm2 start npm --name "modern-stack-hackathon-next" -- start
