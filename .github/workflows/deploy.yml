@@ -30,7 +30,7 @@ jobs:
         run: npx convex codegen
         env:
           CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
-          CONVEX_AUTH_TOKEN: ${{ secrets.CONVEX_AUTH_TOKEN }}
+          CONVEX_DEPLOYMENT: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
 
       - name: Build project
