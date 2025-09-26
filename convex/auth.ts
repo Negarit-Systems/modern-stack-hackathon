@@ -23,6 +23,21 @@ export const createAuth = (
       enabled: true,
       requireEmailVerification: false,
     },
+    socialProviders: {
+      google: {
+        clientId: process.env.GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      },
+    },
+    oauth: {
+      google: {
+        clientId: process.env.GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      },
+    },
+    accountLinking: {
+      enabled: true,
+    },
     plugins: [convex()],
   });
 };
