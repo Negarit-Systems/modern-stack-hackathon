@@ -1,7 +1,8 @@
-import type { NextConfig } from "next";
+const nextConfig = {
+  output: 'standalone',
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
+  },
+}
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-export default nextConfig;
+module.exports = nextConfig
