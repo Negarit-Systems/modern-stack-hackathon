@@ -68,7 +68,7 @@ jobs:
             npm ci --only=production
 
             # Start the application
-            pm2 restart start npm --name "modern-stack-hackathon-next" -- start
+            pm2 restart npm --name "modern-stack-hackathon-next" -- start
 
             # Save PM2 configuration
             pm2 save
