@@ -26,7 +26,6 @@ export default function AuthenticationModal({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  // const authenticated = authClient.useSession();
 
   const handleAuthSubmit = async () => {
     const user = await authClient.signIn.social({
@@ -36,12 +35,15 @@ export default function AuthenticationModal({
       newUserCallbackURL: "/dashboard",
       disableRedirect: false,
     });
-    console.log(user);
+
     if (user.error) {
       setError(user.error.message ?? "Signup failed");
       return;
     }
     onAuthenticated(user);
+
+    onClose();
+    setFormData({ name: "", email: "", password: "", confirmPassword: "" });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
