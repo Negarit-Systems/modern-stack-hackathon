@@ -1,4 +1,4 @@
-name: Deploy Next.js to VPS
+name: Hackathon Project Deployment
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
       - run: npm ci
       - run: npx convex codegen
         env:
-          CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }} 
+          CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
       - run: npm run build
         env:
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
