@@ -29,18 +29,20 @@ export default function ResearchDashboard() {
   // Actions
   const handleChatbotQueryRaw = useAction(api.functions.ai.handleUserQuery);
 
-  const handleChatbotQuery = (sessionId: Id<"sessions">, prompt: string) => {
-    return handleChatbotQueryRaw({ sessionId, prompt });
+  const handleChatbotQuery = async(sessionId: Id<"sessions">, prompt: string) => {
+    return await handleChatbotQueryRaw({ sessionId, prompt });
   };
 
   const handleContentUpdate = async (content: string) => {
-    try {
-      await updateDocument({
-        id: document!._id,
-        updates: { content }
-      });
-    } catch (error) {
-      console.error('Error updating document:', error);
+    if (document) {
+      try {
+        await updateDocument({
+          id: document._id,
+          updates: { content }
+        });
+      } catch (error) {
+        console.error('Error updating document:', error);
+      }
     }
   };
 
@@ -143,7 +145,7 @@ export default function ResearchDashboard() {
     }
   };
 
-  return (
+  return session && document ? (
     <div className="min-h-screen bg-background flex">
       <Sidebar
         session={session}
@@ -199,5 +201,5 @@ export default function ResearchDashboard() {
         comments={comments}
       /> */}
     </div>
-  );
+  ): null;
 }

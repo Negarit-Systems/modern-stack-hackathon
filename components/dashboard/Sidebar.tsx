@@ -60,7 +60,7 @@ export default function Sidebar({
           <TeamChat messages={messages} onSendMessage={onSendMessage} user={user} />
           <CollaboratorsList collaborators={collaborators} />
           <RecentInsights
-            sessionId={session?._id}
+            sessionId={session._id}
           />
         </div>
       )}

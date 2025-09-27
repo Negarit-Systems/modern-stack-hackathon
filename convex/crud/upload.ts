@@ -40,7 +40,6 @@ export const create = mutation({
       ...item,
       url,
       uploadedBy,
-      createdAt: Date.now(),
     };
     return await ctx.db.insert("uploads", newItem);
   },

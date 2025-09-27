@@ -22,7 +22,7 @@ interface ChatMessage {
 
 export default function AIAssistant({ onQuery, session, loading }: AIAssistantProps) {
   const getChatbotHistory = useQuery(api.crud.chatbot.get, {
-    sessionId: session?._id,
+    sessionId: session._id,
   }) || [];
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
