@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { authenticatedUser, makePartial } from "../utils/utils";
 import { sessionSchema } from "../schemas";
+import { api } from "../_generated/api";
 
 // QUERIES
 export const get = query({
@@ -36,7 +37,6 @@ export const getCollaborators = query({
     if (!session) {
       throw new Error("Session not found");
     }
-
     return session.collaboratorIds;
   }
 });
@@ -45,9 +45,12 @@ export const getCollaborators = query({
 export const create = mutation({
   args: { item: v.object(sessionSchema) },
   handler: async (ctx, { item }) => {
-    const id = await ctx.db.insert("sessions", {
-      ...item,
-
+    const id = await ctx.db.insert("sessions", item);
+    await ctx.runMutation(api.crud.document.create, {
+      item: {
+        sessionId: id,
+        content: "",
+      }
     });
     return id;
   },

@@ -130,22 +130,7 @@ export default function ResearchDashboard() {
     setMessages((prev) => [...prev, messageObj]);
   };
 
-  const handleFileUpload = async () => {
-    setLoading(true);
-
-    try {
-      // Replace with real file processing
-      // for (const file of []) {
-      //   // Process file and update summaries
-      // }
-    } catch (error) {
-      console.error("File upload failed:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return session && document ? (
+  return session ? (
     <div className="min-h-screen bg-background flex">
       <Sidebar
         session={session}
@@ -154,7 +139,6 @@ export default function ResearchDashboard() {
         user={user}
         onSendMessage={handleSendMessage}
         onChatbotQuery={handleChatbotQuery}
-        onFileUpload={handleFileUpload}
         loading={loading}
       />
 

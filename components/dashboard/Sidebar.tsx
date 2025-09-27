@@ -15,7 +15,6 @@ interface SidebarProps {
   user: any;
   onSendMessage: (message: string) => void;
   onChatbotQuery: (sessionId: Id<"sessions">, prompt: string) => void;
-  onFileUpload: (files: FileList) => void;
   loading: boolean;
 }
 
@@ -26,7 +25,6 @@ export default function Sidebar({
   user,
   onSendMessage,
   onChatbotQuery,
-  onFileUpload,
   loading,
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
