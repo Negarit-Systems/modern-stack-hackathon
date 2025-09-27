@@ -10,17 +10,11 @@ export const get = query({
   handler: async (ctx, { take }) => {
     const userId = await authenticatedUser(ctx);
 
-    const items = await ctx.db
-      .query("sessions")
-      .filter(q => q.eq(q.field("creatorId"), userId))
-      .order("desc")
-      .take(take || 20);
-
-    // filter collaborators client-side
-    return items.filter(item => item.collaboratorIds.includes(userId));
+    const all = await ctx.db.query("sessions").collect();
+    const filtered = all.filter(s => s.collaboratorIds?.includes(userId));
+    return filtered.slice(0, take ?? 20);
   },
 });
-
 
 export const getOne = query({
   args: { id: v.id("sessions") },
