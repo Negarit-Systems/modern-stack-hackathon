@@ -8,28 +8,43 @@ on:
 
 jobs:
   build:
+    name: Build Next.js App
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: package-lock.json
-      - run: npm ci
-      - run: npx convex codegen
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Convex Codegen
+        run: |
+          echo "CONVEX_TOKEN=${{ secrets.CONVEX_ACCESS_TOKEN }}" >> $GITHUB_ENV
+          npx convex codegen
         env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
           CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
-      - run: npm run build
+
+      - name: Build Next.js App
+        run: npm run build
         env:
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
 
   deploy:
+    name: Deploy to VPS
     needs: build
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to VPS
+      - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
