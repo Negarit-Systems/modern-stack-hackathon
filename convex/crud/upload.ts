@@ -12,7 +12,7 @@ export const get = query({
 });
 
 export const getBySession = query({
-  args: { sessionId: v.optional(v.string()) },
+  args: { sessionId: v.string() },
   handler: async (ctx, { sessionId }) => {
     const items = await ctx.db
       .query("uploads")
@@ -40,6 +40,7 @@ export const create = mutation({
       ...item,
       url,
       uploadedBy,
+      createdAt: Date.now(),
     };
     return await ctx.db.insert("uploads", newItem);
   },

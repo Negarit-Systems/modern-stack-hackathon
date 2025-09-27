@@ -6,7 +6,7 @@ import { chatbotSchema } from "../schemas";
 // QUERIES
 export const get = query({
   args: {
-    sessionId: v.optional(v.id("sessions")),
+    sessionId: v.id("sessions"),
   },
   handler: async (ctx, { sessionId }) => {
     const userId = await authenticatedUser(ctx);
