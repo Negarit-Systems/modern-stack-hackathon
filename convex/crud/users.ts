@@ -12,7 +12,7 @@
 // });
 
 // export const getOne = query({
-//   args: { id: v.id("user") },
+//   args: { id: v.string() },
 //   handler: async (ctx, { id }) => {
 //     const item = await ctx.db.get(id);
 //     return item;
@@ -30,7 +30,7 @@
 
 // export const update = mutation({
 //   args: {
-//     id: v.id("user"),
+//     id: v.string(),
 //     updates: v.object(makePartial(userSchema)),
 //   },
 //   handler: async (ctx, { id, updates }) => {
@@ -39,7 +39,7 @@
 // });
 
 // export const deleteOne = mutation({
-//   args: { id: v.id("user") },
+//   args: { id: v.string() },
 //   handler: async (ctx, { id }) => {
 //     await ctx.db.delete(id);
 //   },

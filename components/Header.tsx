@@ -17,6 +17,8 @@ export default function Header() {
   const authenticatedUser = authClient.useSession();
   const user = authenticatedUser?.data?.user || null;
 
+  console.log(authenticatedUser)
+
   const confirmLogout = async () => {
     try {
       await authClient.signOut();

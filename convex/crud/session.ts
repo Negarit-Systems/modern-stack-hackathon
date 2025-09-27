@@ -1,15 +1,25 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
-import { makePartial } from "../utils/utils";
+import { authenticatedUser, makePartial } from "../utils/utils";
 import { sessionSchema } from "../schemas";
 
 // QUERIES
 export const get = query({
-  handler: async (ctx) => {
-    const items = await ctx.db.query("sessions").collect();
-    return items;
+  args: { take: v.optional(v.number()) },
+  handler: async (ctx, { take }) => {
+    const userId = await authenticatedUser(ctx);
+
+    const items = await ctx.db
+      .query("sessions")
+      .filter(q => q.eq(q.field("creatorId"), userId))
+      .order("desc")
+      .take(take || 20);
+
+    // filter collaborators client-side
+    return items.filter(item => item.collaboratorIds.includes(userId));
   },
 });
+
 
 export const getOne = query({
   args: { id: v.id("sessions") },
@@ -35,7 +45,10 @@ export const getCollaborators = query({
 export const create = mutation({
   args: { item: v.object(sessionSchema) },
   handler: async (ctx, { item }) => {
-    const id = await ctx.db.insert("sessions", item);
+    const id = await ctx.db.insert("sessions", {
+      ...item,
+
+    });
     return id;
   },
 });

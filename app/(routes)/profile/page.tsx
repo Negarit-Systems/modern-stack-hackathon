@@ -26,6 +26,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const userData = localStorage.getItem("user")
+    console.log("Loaded user data:", userData)
     if (userData) {
       const parsedUser = JSON.parse(userData)
       setUser(parsedUser)

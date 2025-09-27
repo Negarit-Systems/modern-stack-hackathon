@@ -104,7 +104,7 @@ export default function RichTextEditor({
   };
 
   return (
-    <div className="border border-border rounded-lg overflow-hidden bg-card">
+    <div className="border border-border rounded-lg overflow-hidden bg-card" style={{ minHeight: "850px" }}>
       {/* Toolbar */}
       <div className="border-b border-border p-3 bg-muted/30">
         <div className="flex flex-wrap items-center gap-1">

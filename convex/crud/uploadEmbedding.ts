@@ -23,8 +23,7 @@ export const getOne = query({
 export const create = mutation({
   args: { item: v.object(uploadEmbeddingsSchema) },
   handler: async (ctx, { item }) => {
-    const newItem = { ...item, createdAt: Date.now() };
-    const id = await ctx.db.insert("uploadEmbeddings", newItem);
+    const id = await ctx.db.insert("uploadEmbeddings", item);
     return id;
   },
 });
@@ -37,8 +36,7 @@ export const bulkCreate = mutation({
     const ids: string[] = [];
 
     for (const item of items) {
-      const newItem = { ...item, createdAt: Date.now() };
-      const id = await ctx.db.insert("uploadEmbeddings", newItem);
+      const id = await ctx.db.insert("uploadEmbeddings", item);
       ids.push(id);
     }
 

@@ -6,7 +6,6 @@ export const documentSchema = {
   version: v.number(),
   editorIds: v.array(v.string()),
   commentIds: v.array(v.id("comments")),
-  createdAt: v.number(),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
 };

@@ -47,7 +47,6 @@ export const scrapeAndStore = action({
             title: parsedItem?.title ?? "",
             urls: args.urls,
             content: parsedItem?.content ?? "",
-            createdAt: Date.now(),
           },
         }
       );

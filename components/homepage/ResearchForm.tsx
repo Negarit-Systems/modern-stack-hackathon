@@ -3,12 +3,16 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Filter, Users, ArrowRight } from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import { useMutation } from "convex/react";
 
 interface ResearchFormProps {
   user: any;
 }
 
 export default function ResearchForm({ user }: ResearchFormProps) {
+  const createResearchSession = useMutation(api.crud.session.create)
+
   const router = useRouter();
   const [formData, setFormData] = useState({
     topic: "",
@@ -29,6 +33,21 @@ export default function ResearchForm({ user }: ResearchFormProps) {
     if (!formData.topic.trim()) {
       setError("Please enter a research topic");
       return;
+    }
+
+    try {
+      const sessionId = await createResearchSession({
+        item: {
+          title: formData.topic,
+          creatorId: user.id,
+          collaboratorIds: [user.id],
+          status: "active",
+        }
+      });
+      router.push(`/dashboard/${sessionId}`);
+    } catch (err) {
+      console.error("Error creating research session:", err);
+      setError("Failed to create research session. Please try again.");
     }
 
     setLoading(true);

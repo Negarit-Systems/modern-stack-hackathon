@@ -8,7 +8,6 @@ export const uploadSchema = {
   uploadedBy: v.optional(v.string()),
   url: v.optional(v.string()),
   summary: v.optional(v.string()),
-  createdAt: v.optional(v.number()),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
 };

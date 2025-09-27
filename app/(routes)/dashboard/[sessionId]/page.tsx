@@ -10,11 +10,14 @@ import CommentSystem from "@/components/dashboard/CommentSystem";
 import { Id } from "@/convex/_generated/dataModel";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { mockCollaborators } from "@/lib/mockData";
+import { authClient } from "@/app/lib/auth.client";
 
 export default function ResearchDashboard() {
   const params = useParams();
   const router = useRouter();
+
+  const authenticatedUser = authClient.useSession();
+  const user = authenticatedUser?.data?.user || null;
   const sessionId = (params?.sessionId ?? "") as Id<"sessions">;
 
   // Queries
@@ -47,20 +50,14 @@ export default function ResearchDashboard() {
   const [messages, setMessages] = useState<any[]>([]);
   const [comments, setComments] = useState<any[]>([]);
 
-  const [collaborators, setCollaborators] = useState(mockCollaborators)
+  const [collaborators, setCollaborators] = useState([])
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    // Get user data
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      setUser(JSON.parse(userData));
-    } else {
+    if (!user) {
       router.push("/");
-      return;
     }
   }, [router]);
 

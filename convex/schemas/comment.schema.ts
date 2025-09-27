@@ -7,7 +7,6 @@ export const commentSchema = {
   parentId: v.optional(v.id("comments")),
   resolved: v.boolean(),
   assignedTo: v.optional(v.string()),
-  createdAt: v.number(),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
 };

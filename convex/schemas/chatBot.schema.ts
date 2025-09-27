@@ -5,7 +5,6 @@ export const chatbotSchema = {
   userId: v.string(),
   prompt: v.string(),
   response: v.string(),
-  createdAt: v.optional(v.number()),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
 };

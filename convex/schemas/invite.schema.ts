@@ -11,7 +11,6 @@ export const inviteSchema = {
     v.literal("EXPIRED")
   ),
   invitedBy: v.string(),
-  createdAt: v.number(),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
 };

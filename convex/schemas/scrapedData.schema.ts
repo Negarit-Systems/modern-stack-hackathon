@@ -5,7 +5,6 @@ export const scrapedDataSchema = {
   title: v.string(),
   urls: v.array(v.string()),
   content: v.string(),
-  createdAt: v.number(),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
 };
