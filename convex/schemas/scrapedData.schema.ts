@@ -3,8 +3,9 @@ import { v } from "convex/values";
 export const scrapedDataSchema = {
   sessionId: v.id("sessions"),
   title: v.string(),
-  urls: v.array(v.string()),
+  url: v.string(),
   content: v.string(),
+  insightId: v.optional(v.id("insights")),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
 };

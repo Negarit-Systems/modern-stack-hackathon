@@ -7,6 +7,7 @@ import { scrapedDataSchema } from "./scrapedData.schema";
 import { sessionSchema } from "./session.schema";
 import { uploadSchema } from "./upload.schema";
 import { uploadEmbeddingsSchema } from "./uploadEmbeddings.schema";
+import { insightsSchema } from "./insights.schema";
 import { testSchema } from "./testing.schema";
 
 export {
@@ -19,5 +20,6 @@ export {
   sessionSchema,
   uploadSchema,
   uploadEmbeddingsSchema,
+  insightsSchema,
   testSchema,
 };

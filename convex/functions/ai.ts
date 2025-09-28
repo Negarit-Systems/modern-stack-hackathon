@@ -4,27 +4,26 @@ import { getProvider } from "../ai/adapter";
 import { api } from "../_generated/api";
 import { authenticatedUser } from "../utils/utils";
 
-export const handleUserQuery = action({
+export const getContextBasedResponse = action({
   args: {
     sessionId: v.id("sessions"),
     prompt: v.string(),
   },
-  handler: async (ctx, { sessionId, prompt }): Promise<void> => {
-    const userId = await authenticatedUser(ctx);
+  handler: async (ctx, { sessionId, prompt }): Promise<string | string[]> => {
     const aiProvider = getProvider();
+    let finalResponse: any;
 
+    // Generate embedding for the prompt to find relevant context
     const userEmbedding = await aiProvider.generateEmbeddings([prompt]);
-
     const searchResults = await ctx.vectorSearch(
       "uploadEmbeddings",
       "by_embedding",
       {
         vector: userEmbedding[0],
         filter: (q) => q.eq("sessionId", sessionId),
-        limit: 5
+        limit: 5,
       }
     );
-    console.log("Search results:", searchResults);
 
     const contextDocs = await Promise.all(
       searchResults.map(async (result) => {
@@ -34,56 +33,65 @@ export const handleUserQuery = action({
         return doc?.content ?? "";
       })
     );
-    const context = contextDocs.join("\n\n");
+    const documentContext = contextDocs.join("\n\n");
 
-    const augmentedPrompt = `Based on the following context, answer the user's question:\n\nContext:\n${context}\n\nQuestion:\n${prompt}`;
+    // Get available functions
     const functions = await ctx.runQuery(api.ai.ai.getFunctions);
-    console.log("Available functions:", functions);
 
-    const aiResponse = await aiProvider.callFunction(
-      augmentedPrompt,
-      functions,
-      context
-    );
+    // Call the AI provider with the prompt and functions
+    const response = await aiProvider.callFunction(prompt, functions);
 
-    let finalResponse: string;
+    // Check if the response contains a function call
+    if (response.tool_call) {
+      const { name, args } = response.tool_call.function;
 
-    if (aiResponse.tool_call || aiResponse.choices?.[0]?.message?.tool_calls) {
-      console.log("AI requested a function call.");
-      const call =
-        aiResponse.tool_call ||
-        aiResponse.choices[0].message.tool_calls[0].function;
-      const functionName = call.name;
-      const args = call.arguments;
-
-      console.log("Selected Function: ", functionName)
-      console.log("Function Args: ", args)
-
-      // Execute the function
-      if (functionName === "get_document_summary") {
-        const result = await ctx.runAction(api.ai.ai.getSummary, {
-          title: args.topic,
+      if (name === "generate_research_urls") {
+        const { topic, max_urls } = args;
+        finalResponse = await ctx.runAction(api.ai.ai.generateResearchUrls, {
+          topic,
+          max_urls,
         });
-
-        const finalAiResponse = await aiProvider.generateText(
-          `The result of the function call was: ${result}. Now, generate a user-friendly response.`
-        );
-        finalResponse = finalAiResponse;
+      } else if (name === "get_documents_summary") {
+        const { document_title } = args;
+        finalResponse = await ctx.runAction(api.ai.ai.getSummary, {
+          title: document_title,
+        });
       } else {
-        // fallback to normal response
-        finalResponse = await aiProvider.generateText(augmentedPrompt);
+        throw new Error(`Unknown function: ${name}`);
       }
     } else {
-      finalResponse = await aiProvider.generateText(augmentedPrompt);
+      finalResponse = await aiProvider.generateText(prompt, documentContext);
     }
 
-    // Save the AI's response to the database
+    return finalResponse;
+  },
+});
+
+export const handleUserQuery = action({
+  args: {
+    sessionId: v.id("sessions"),
+    prompt: v.string(),
+  },
+  handler: async (ctx, { sessionId, prompt }): Promise<void> => {
+    const userId = await authenticatedUser(ctx);
+    let response = await ctx.runAction(
+      api.functions.ai.getContextBasedResponse,
+      {
+        sessionId,
+        prompt,
+      }
+    );
+
+    if (Array.isArray(response)) {
+      response = response.join("\n");
+    }
+
     await ctx.runMutation(api.crud.chatbot.create, {
       item: {
         sessionId,
         userId,
         prompt,
-        response: finalResponse,
+        response: response,
       },
     });
   },
