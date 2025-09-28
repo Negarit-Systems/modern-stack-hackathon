@@ -30,8 +30,9 @@ export default defineSchema({
   invites: defineTable(schemas.inviteSchema).index("by_sessionId", [
     "sessionId",
   ]),
-  scrapedData: defineTable(schemas.scrapedDataSchema).index("by_sessionId", [
+  scrapedData: defineTable(schemas.scrapedDataSchema).index("by_session_and_insight", [
     "sessionId",
+    "insightId"
   ]),
   insights: defineTable(schemas.insightsSchema).index("by_sessionId", [
     "sessionId",

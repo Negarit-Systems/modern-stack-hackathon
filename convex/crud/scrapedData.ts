@@ -10,7 +10,20 @@ export const get = query({
   handler: async (ctx, { sessionId }) => {
     const items = await ctx.db
       .query("scrapedData")
-      .withIndex("by_sessionId", (q) => q.eq("sessionId", sessionId))
+      .withIndex("by_session_and_insight", (q) => q.eq("sessionId", sessionId))
+      .collect();
+    return items;
+  },
+});
+
+export const getByInsightId = query({
+  args: { sessionId: v.id("sessions"), insightId: v.id("insights") },
+  handler: async (ctx, { sessionId, insightId }) => {
+    const items = await ctx.db
+      .query("scrapedData")
+      .withIndex("by_session_and_insight", (q) => q
+        .eq("sessionId", sessionId)
+        .eq("insightId", insightId))
       .collect();
     return items;
   },

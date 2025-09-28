@@ -68,6 +68,23 @@ export const scrapAndStoreInsights = action({
 
     console.log("Scrape job completed:", scrapJob);
 
+    const uploads = await ctx.runQuery(
+      api.crud.upload.getBySession, { sessionId }
+    )
+
+    const newInsight= await ctx.runMutation(
+      api.crud.insights.create,
+      {
+        item: {
+          sessionId: sessionId,
+          topic: topic ?? "Not Specified",
+          urls: customUrls || [],
+          uploadIds: uploads.map(u => u._id),
+          status: "active",
+        },
+      }
+    );
+
     for (const item of scrapJob.data) {
       if (!item.json) {
         continue;
@@ -93,6 +110,7 @@ export const scrapAndStoreInsights = action({
             title: parsedItem?.title ?? "",
             url: parsedItem?.url,
             content: parsedItem?.content ?? "",
+            insightId: newInsight,
           },
         }
       );
