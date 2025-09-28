@@ -89,3 +89,88 @@ export const processSessionFiles: ReturnType<typeof action> = action({
     return { processed: allChunks.length, uploads: uploads.length, skipped };
   },
 });
+
+export const processSingleFile: ReturnType<typeof action> = action({
+  args: {
+    uploadId: v.id("uploads"),
+    chunkSize: v.optional(v.number()),
+  },
+  handler: async (ctx, { uploadId, chunkSize = 500 }) => {
+    console.log(`Starting processing for upload: ${uploadId}`);
+    
+    // Update status to processing
+    await ctx.runMutation(api.crud.upload.update, {
+      id: uploadId,
+      updates: { parseStatus: "processing" }
+    });
+
+    try {
+      const upload = await ctx.runQuery(api.crud.upload.getOne, { id: uploadId });
+      if (!upload) {
+        throw new Error("Upload not found");
+      }
+
+      const fileBuffer = await ctx.storage.get(upload.storageId);
+      if (!fileBuffer) {
+        throw new Error("File content not found");
+      }
+
+      const arrayBuffer = await fileBuffer.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const pdfData = await pdf(buffer);
+      const content = pdfData.text;
+      
+      if (!content.trim()) {
+        throw new Error("Empty PDF content");
+      }
+
+      const chunks = await chunkText(content, chunkSize);
+      const maxChunksPerFile = 100;
+      if (chunks.length > maxChunksPerFile) {
+        console.warn(`Truncating chunks for upload ${uploadId} to ${maxChunksPerFile}`);
+        chunks.length = maxChunksPerFile;
+      }
+
+      const embeddings = await ctx.runAction(api.ai.ai.generateEmbeddings, {
+        texts: chunks,
+      });
+
+      const allChunks = chunks.map((chunk, i) => ({
+        uploadId: upload._id,
+        sessionId: upload.sessionId,
+        content: chunk,
+        embedding: embeddings[i],
+      }));
+
+      if (allChunks.length > 0) {
+        await ctx.runMutation(api.crud.uploadEmbedding.bulkCreate, { items: allChunks });
+      }
+
+      // Update status to completed
+      await ctx.runMutation(api.crud.upload.update, {
+        id: uploadId,
+        updates: { 
+          parseStatus: "completed",
+          parseError: undefined 
+        }
+      });
+
+      console.log(`Processing complete for upload ${uploadId}: processed ${allChunks.length} chunks`);
+      return { success: true, chunks: allChunks.length };
+
+    } catch (error) {
+      console.error(`Error processing file ${uploadId}:`, error);
+      
+      // Update status to error
+      await ctx.runMutation(api.crud.upload.update, {
+        id: uploadId,
+        updates: { 
+          parseStatus: "error",
+          parseError: error instanceof Error ? error.message : "Unknown error"
+        }
+      });
+
+      return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    }
+  },
+});
