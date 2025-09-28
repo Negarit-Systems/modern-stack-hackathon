@@ -1,7 +1,17 @@
 "use client";
 
-import React, { ChangeEvent, useState } from "react";
-import { ExternalLink, Upload, Lightbulb, Trash2, Archive } from "lucide-react";
+import React, { ChangeEvent, useCallback, useState } from "react";
+import { 
+  ExternalLink, 
+  Upload, 
+  X, 
+  FileText, 
+  CheckCircle, 
+  AlertCircle, 
+  Loader2,
+  Trash2,
+  Play
+} from "lucide-react";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -14,376 +24,349 @@ interface UploadProps {
   sessionId: Id<"sessions">;
 }
 
+interface UploadingFile {
+  id: string;
+  file: File;
+  progress: number;
+  status: 'uploading' | 'uploaded' | 'error';
+  error?: string;
+}
+
 export default function RecentInsights({ onFileSelected, sessionId }: UploadProps) {
   const generateUploadUrl = useMutation(api.crud.upload.generateUploadUrl);
   const createUpload = useMutation(api.crud.upload.create);
-  const createInsight = useMutation(api.crud.insights.create);
+  const deleteUpload = useMutation(api.crud.upload.deleteOne);
   const uploads = useQuery(api.crud.upload.getBySession, { sessionId });
-  const parseText = useAction(api.functions.processFile.processSessionFiles);
-  const scrapeUrls = useAction(api.functions.scrapeAndStore.scrapAndStoreInsights);
-  const scrappedInsights = useQuery(api.crud.scrapedData.get, { sessionId });
-  const archivedInsights = useQuery(api.crud.insights.getBySession, { sessionId });
+  const processSingleFile = useAction(api.functions.processFile.processSingleFile);
+  
+  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
+  const [globalMessage, setGlobalMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
 
-  const [parseLoading, setParseLoading] = useState(false);
-  const [insightLoading, setInsightLoading] = useState(false);
-  const [selectedInsight, setSelectedInsight] = useState<any | null>(null);
-  const [topic, setTopic] = useState("");
-  const [urls, setUrls] = useState<string[]>([""]);
-  const [urlErrors, setUrlErrors] = useState<string[]>([""]);
+  const handleFileUpload = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    // Clear previous messages
+    setGlobalMessage(null);
 
-    if (onFileSelected) {
-      onFileSelected(file);
-    }
+    for (const file of files) {
+      const uploadId = Date.now().toString() + Math.random();
+      
+      // Add to uploading files
+      setUploadingFiles(prev => [...prev, {
+        id: uploadId,
+        file,
+        progress: 0,
+        status: 'uploading'
+      }]);
 
-    const uploadUrl = await generateUploadUrl({});
-    const result = await fetch(uploadUrl, {
-      method: "POST",
-      body: file,
-      headers: {
-        "Content-Type": file.type,
-      },
-    });
-    if (!result.ok) {
-      throw new Error("File upload failed");
-    }
-
-    const { storageId } = await result.json();
-    await createUpload({
-      item: {
-        fileName: file.name,
-        fileType: file.type,
-        storageId: storageId as Id<"_storage">,
-        sessionId: sessionId!,
-      },
-    });
-  };
-
-  const validateUrl = (url: string): string => {
-    if (!url) return "";
-    try {
-      new URL(url);
-      return "";
-    } catch {
-      return "Invalid URL";
-    }
-  };
-
-  const handleUrlChange = (index: number, value: string) => {
-    const newUrls = [...urls];
-    newUrls[index] = value;
-    setUrls(newUrls);
-
-    const newErrors = [...urlErrors];
-    newErrors[index] = validateUrl(value);
-    setUrlErrors(newErrors);
-  };
-
-  const addUrlField = () => {
-    setUrls([...urls, ""]);
-    setUrlErrors([...urlErrors, ""]);
-  };
-
-  const removeUrlField = (index: number) => {
-    if (urls.length > 1) {
-      setUrls(urls.filter((_, i) => i !== index));
-      setUrlErrors(urlErrors.filter((_, i) => i !== index));
-    }
-  };
-
-  const handleGenerateInsight = async () => {
-    setInsightLoading(true);
-    try {
-      const validUrls = urls
-        .map(url => url.trim())
-        .filter(url => url.length > 0 && validateUrl(url) === "");
-
-      await scrapeUrls({
-        sessionId,
-        topic: topic.trim() || undefined,
-        customUrls: validUrls.length > 0 ? validUrls : undefined
-      });
-    } catch (error) {
-      console.error("Error generating research insight:", error);
-    }
-    setInsightLoading(false);
-  };
-
-  const handleArchiveInsight = async () => {
-    if (!scrappedInsights || scrappedInsights.length === 0) {
-      console.warn("No insights to archive");
-      return;
-    }
-
-    try {
-      const uploadIds = uploads?.map(upload => upload._id) || [];
-      const scrapedDataIds = scrappedInsights?.map(insight => insight._id) || [];
-      await createInsight({
-        item: {
-          sessionId,
-          topic: topic.trim() || "Untitled Topic",
-          urls: urls.filter(url => url.trim().length > 0 && validateUrl(url) === ""),
-          uploadIds,
-          scrapedDataIds,
+      try {
+        if (onFileSelected) {
+          onFileSelected(file);
         }
+
+        // Simulate progress updates
+        const progressInterval = setInterval(() => {
+          setUploadingFiles(prev => prev.map(f => 
+            f.id === uploadId ? { ...f, progress: Math.min(f.progress + 10, 90) } : f
+          ));
+        }, 200);
+
+        const uploadUrl = await generateUploadUrl({});
+        const result = await fetch(uploadUrl, {
+          method: "POST",
+          body: file,
+          headers: {
+            "Content-Type": file.type,
+          },
+        });
+
+        clearInterval(progressInterval);
+
+        if (!result.ok) {
+          throw new Error("File upload failed");
+        }
+
+        const { storageId } = await result.json();
+        const uploadRecord = await createUpload({
+          item: {
+            fileName: file.name,
+            fileType: file.type,
+            storageId: storageId as Id<"_storage">,
+            sessionId: sessionId!,
+            parseStatus: "pending"
+          }
+        });
+
+        // Complete upload
+        setUploadingFiles(prev => prev.map(f => 
+          f.id === uploadId ? { ...f, progress: 100, status: 'uploaded' } : f
+        ));
+
+        // Auto-parse the newly uploaded file
+        setTimeout(async () => {
+          try {
+            const result = await processSingleFile({ uploadId: uploadRecord });
+            if (result.success) {
+              setGlobalMessage({ 
+                type: 'success', 
+                text: `${file.name} has been processed and is ready for AI analysis!` 
+              });
+            } else {
+              setGlobalMessage({ 
+                type: 'error', 
+                text: `Failed to process ${file.name}: ${result.error}` 
+              });
+            }
+          } catch (error) {
+            setGlobalMessage({ 
+              type: 'error', 
+              text: `Error processing ${file.name}` 
+            });
+          }
+        }, 1000);
+
+        // Remove from uploading files after 3 seconds
+        setTimeout(() => {
+          setUploadingFiles(prev => prev.filter(f => f.id !== uploadId));
+        }, 3000);
+
+      } catch (error) {
+        setUploadingFiles(prev => prev.map(f => 
+          f.id === uploadId ? { 
+            ...f, 
+            status: 'error', 
+            error: error instanceof Error ? error.message : 'Upload failed' 
+          } : f
+        ));
+      }
+    }
+
+    // Reset input
+    e.target.value = '';
+  }, [generateUploadUrl, createUpload, onFileSelected, sessionId, processSingleFile]);
+
+  const handleDeleteFile = useCallback(async (uploadId: Id<"uploads">, fileName: string) => {
+    try {
+      await deleteUpload({ id: uploadId });
+      setGlobalMessage({ 
+        type: 'info', 
+        text: `${fileName} has been removed` 
       });
     } catch (error) {
-      console.error("Error archiving insight:", error);
+      setGlobalMessage({ 
+        type: 'error', 
+        text: `Failed to remove ${fileName}` 
+      });
+    }
+  }, [deleteUpload]);
+
+  const handleParseFile = useCallback(async (uploadId: Id<"uploads">, fileName: string) => {
+    try {
+      const result = await processSingleFile({ uploadId });
+      if (result.success) {
+        setGlobalMessage({ 
+          type: 'success', 
+          text: `${fileName} has been processed successfully!` 
+        });
+      } else {
+        setGlobalMessage({ 
+          type: 'error', 
+          text: `Failed to process ${fileName}: ${result.error}` 
+        });
+      }
+    } catch (error) {
+      setGlobalMessage({ 
+        type: 'error', 
+        text: `Error processing ${fileName}` 
+      });
+    }
+  }, [processSingleFile]);
+
+  const getStatusIcon = (parseStatus?: string) => {
+    switch (parseStatus) {
+      case 'completed':
+        return <CheckCircle size={16} className="text-green-500" />;
+      case 'processing':
+        return <Loader2 size={16} className="text-blue-500 animate-spin" />;
+      case 'error':
+        return <AlertCircle size={16} className="text-red-500" />;
+      default:
+        return <FileText size={16} className="text-gray-400" />;
     }
   };
+
+  const getStatusText = (parseStatus?: string) => {
+    switch (parseStatus) {
+      case 'completed':
+        return 'Ready for AI';
+      case 'processing':
+        return 'Processing...';
+      case 'error':
+        return 'Failed';
+      default:
+        return 'Pending';
+    }
+  };
+
+  const completedFiles = uploads?.filter(u => u.parseStatus === 'completed').length || 0;
+  const totalFiles = uploads?.length || 0;
 
   return (
-    <div className="bg-background border border-border rounded-lg p-3">
-      <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm">
-        <ExternalLink size={16} className="text-primary" />
-        Research Insights
-      </h3>
-
-      {/* Topic and URLs input + Upload + Generate + Archive buttons */}
-      <div className="space-y-3">
-        <div className="flex flex-col gap-4">
-          {/* Topic input with label */}
-          <div>
-            <label className="text-xs font-semibold mb-1 block text-gray-700">Topic (optional)</label>
-            <input
-              type="text"
-              placeholder="E.g. AI in Healthcare"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              className="px-2 py-1 border rounded-md text-xs w-full focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50"
-            />
-          </div>
-          {/* URLs input with label and better spacing */}
-          <div>
-            <label className="text-xs font-semibold mb-1 block text-gray-700">Reference URLs (optional)</label>
-            <div className="space-y-2">
-              {urls.map((url, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      placeholder={`Paste URL #${index + 1}`}
-                      value={url}
-                      onChange={(e) => handleUrlChange(index, e.target.value)}
-                      className={`px-2 py-1 border rounded-md text-xs w-full focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 ${
-                        urlErrors[index] ? "border-red-500" : ""
-                      }`}
-                    />
-                    {urlErrors[index] && (
-                      <p className="text-red-500 text-xs mt-1">{urlErrors[index]}</p>
-                    )}
-                  </div>
-                  {urls.length > 1 && (
-                    <button
-                      onClick={() => removeUrlField(index)}
-                      className="text-red-500 hover:text-red-600"
-                      title="Remove URL"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                onClick={addUrlField}
-                className="text-xs text-primary hover:underline"
-              >
-                + Add another URL
-              </button>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-md cursor-pointer hover:bg-primary/90 transition-colors text-xs">
-            <Upload size={20} />
-            Upload
-            <input
-              type="file"
-              multiple
-              onChange={handleFileUpload}
-              className="hidden"
-              accept=".pdf"
-            />
-          </label>
-          <button
-            className="flex items-center gap-1 px-2 py-1 bg-yellow-500 text-white rounded-md cursor-pointer hover:bg-yellow-600 transition-colors text-xs"
-            disabled={insightLoading || urlErrors.some(error => error !== "")}
-            onClick={handleGenerateInsight}
-          >
-            <Lightbulb size={20} />
-            {insightLoading ? "Generating..." : "Generate Research Insight"}
-          </button>
-          <button
-            className="flex items-center gap-1 px-2 py-1 bg-gray-500 text-white rounded-md cursor-pointer hover:bg-gray-600 transition-colors text-xs"
-            disabled={!scrappedInsights || scrappedInsights.length === 0}
-            onClick={handleArchiveInsight}
-          >
-            <Archive size={20} />
-            Archive Insights
-          </button>
-        </div>
+    <div className="bg-background border border-border rounded-lg p-4">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold flex items-center gap-2 text-sm">
+          <FileText size={16} className="text-primary" />
+          Document Library
+        </h3>
+        {totalFiles > 0 && (
+          <span className="text-xs text-muted-foreground">
+            {completedFiles}/{totalFiles} ready
+          </span>
+        )}
       </div>
 
-      {/* Current Insights */}
-      {scrappedInsights && scrappedInsights.length > 0 && (
-        <div className="mt-4">
-          <h4 className="font-semibold text-sm text-gray-700 mb-2">Current Insights</h4>
-          <div className="max-h-64 overflow-y-auto grid grid-cols-1 sm:grid-cols-1 gap-3">
-            {scrappedInsights.map((insight, idx) => (
-              <div
-                key={idx}
-                onClick={() => setSelectedInsight(insight)}
-                className="p-3 border rounded-lg shadow-sm bg-white cursor-pointer hover:shadow-md transition"
-              >
-                <h4 className="font-semibold text-sm text-gray-800">
-                  {insight.title || "Untitled Insight"}
-                </h4>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Upload Area */}
+      <div className="mb-4">
+        <label className="flex items-center justify-center gap-2 px-4 py-3 bg-primary/10 border-2 border-dashed border-primary/30 rounded-lg cursor-pointer hover:bg-primary/20 transition-all duration-200 text-sm">
+          <Upload size={16} className="text-primary" />
+          <span className="text-primary font-medium">Upload PDF Files</span>
+          <input
+            type="file"
+            multiple
+            onChange={handleFileUpload}
+            className="hidden"
+            accept=".pdf"
+          />
+        </label>
+      </div>
 
-      {selectedInsight && (
-        <InsightDetailModal
-          selectedInsight={selectedInsight}
-          setSelectedInsight={setSelectedInsight}
-        />
-      )}
-
-      {/* Archived Insights as collapsible tabs */}
-      {archivedInsights && archivedInsights.length > 0 && (
-        <div className="mt-4">
-          <h3 className="font-semibold mb-2 text-sm text-gray-700">Archived Insights</h3>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            {archivedInsights.map((insight, idx) => (
-              <details key={idx} className="border rounded-md p-2 bg-gray-50">
-                <summary className="cursor-pointer font-semibold text-xs text-gray-800">
-                  {insight.topic || "Untitled Archived Insight"}
-                </summary>
-                <div className="mt-2 text-xs text-gray-700 space-y-2">
-                  <div>
-                    <strong>Topic:</strong> {insight.topic || "None"}
-                  </div>
-                  <div>
-                    <strong>URLs:</strong> {insight.urls.length > 0 ? (
-                      <ul className="list-disc pl-4">
-                        {insight.urls.map((url, urlIdx) => (
-                          <li key={urlIdx}>
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              {url}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      "None"
-                    )}
-                  </div>
-                  <div>
-                    <strong>Uploads:</strong> {insight.uploadIds.length > 0 ? (
-                      <ul className="list-disc pl-4">
-                        {uploads?.filter(upload => insight.uploadIds.includes(upload._id)).map(upload => (
-                          <li key={upload._id}>
-                            <a
-                              href={upload.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              {upload.fileName}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      "None"
-                    )}
-                  </div>
-                  <div>
-                    <strong>Scraped Data:</strong> {insight.scrapedDataIds.length > 0 ? (
-                      <ul className="list-disc pl-4">
-                        {scrappedInsights?.filter(data => insight.scrapedDataIds.includes(data._id)).map(data => (
-                          <li key={data._id}>
-                            <span
-                              className="text-blue-600 hover:underline cursor-pointer"
-                              onClick={() => setSelectedInsight(data)}
-                            >
-                              {data.title || "Untitled Scraped Data"}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      "None"
-                    )}
-                  </div>
-                  {insight.updatedAt && (
-                    <div>
-                      <strong>Last Updated:</strong> {new Date(insight.updatedAt).toLocaleString()}
-                    </div>
-                  )}
-                </div>
-              </details>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Uploaded PDFs */}
-      {uploads && uploads.length > 0 && (
-        <div className="mb-4">
-          <div className="space-y-2 mt-4 max-h-48 overflow-y-auto">
-            {uploads!.map((upload) => (
-              <div
-                key={upload._id}
-                className="flex items-center justify-between rounded-md border p-2 bg-gray-100 shadow-sm"
-              >
-                <div className="flex-1">
-                  <p className="text-xs font-semibold truncate">{upload.fileName}</p>
-                </div>
-                <a
-                  href={upload.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-2 text-primary hover:underline flex items-center"
-                  title="View Document"
-                >
-                  <ExternalLink size={16} />
-                </a>
-              </div>
-            ))}
-          </div>
-
-          <button
-            className="mt-4 w-full px-3 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center"
-            disabled={parseLoading}
-            onClick={async () => {
-              setParseLoading(true);
-              try {
-                await parseText({ sessionId });
-              } catch (error) {
-                console.error("Error parsing files:", error);
-              }
-              setParseLoading(false);
-            }}
+      {/* Global Message */}
+      {globalMessage && (
+        <div className={`mb-4 p-3 rounded-lg text-sm flex items-center gap-2 ${
+          globalMessage.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
+          globalMessage.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
+          'bg-blue-50 text-blue-700 border border-blue-200'
+        }`}>
+          {globalMessage.type === 'success' && <CheckCircle size={16} />}
+          {globalMessage.type === 'error' && <AlertCircle size={16} />}
+          {globalMessage.type === 'info' && <FileText size={16} />}
+          <span>{globalMessage.text}</span>
+          <button 
+            onClick={() => setGlobalMessage(null)}
+            className="ml-auto hover:opacity-70"
           >
-            {parseLoading ? (
-              <span className="flex items-center gap-2">
-                <span>Parsing...</span>
-              </span>
-            ) : (
-              "Parse All PDFs"
-            )}
+            <X size={14} />
           </button>
+        </div>
+      )}
+
+      {/* Uploading Files */}
+      {uploadingFiles.length > 0 && (
+        <div className="mb-4 space-y-2">
+          {uploadingFiles.map((uploadingFile) => (
+            <div key={uploadingFile.id} className="bg-gray-50 rounded-lg p-3 border">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium truncate">{uploadingFile.file.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {uploadingFile.status === 'uploading' ? `${uploadingFile.progress}%` : 
+                   uploadingFile.status === 'uploaded' ? 'Uploaded' : 'Error'}
+                </span>
+              </div>
+              {uploadingFile.status === 'uploading' && (
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadingFile.progress}%` }}
+                  />
+                </div>
+              )}
+              {uploadingFile.status === 'error' && (
+                <p className="text-xs text-red-600">{uploadingFile.error}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Uploaded Files */}
+      {uploads && uploads.length > 0 && (
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {uploads.map((upload) => (
+            <div
+              key={upload._id}
+              className="flex items-center gap-3 p-3 bg-card border rounded-lg hover:shadow-sm transition-all duration-200"
+            >
+              {getStatusIcon(upload.parseStatus)}
+              
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{upload.fileName}</p>
+                <p className="text-xs text-muted-foreground">
+                  {getStatusText(upload.parseStatus)}
+                  {upload.parseError && ` - ${upload.parseError}`}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1">
+                {upload.parseStatus === 'pending' && (
+                  <button
+                    onClick={() => handleParseFile(upload._id, upload.fileName)}
+                    className="p-1.5 hover:bg-blue-100 rounded-md transition-colors"
+                    title="Process file"
+                  >
+                    <Play size={14} className="text-blue-600" />
+                  </button>
+                )}
+                
+                {upload.url && (
+                  <a
+                    href={upload.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 hover:bg-gray-100 rounded-md transition-colors"
+                    title="View document"
+                  >
+                    <ExternalLink size={14} className="text-gray-600" />
+                  </a>
+                )}
+                
+                <button
+                  onClick={() => handleDeleteFile(upload._id, upload.fileName)}
+                  className="p-1.5 hover:bg-red-100 rounded-md transition-colors"
+                  title="Remove file"
+                >
+                  <Trash2 size={14} className="text-red-600" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {(!uploads || uploads.length === 0) && uploadingFiles.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          <FileText size={32} className="mx-auto mb-2 opacity-50" />
+          <p className="text-sm">No documents uploaded yet</p>
+          <p className="text-xs">Upload PDF files to get started</p>
+        </div>
+      )}
+
+      {/* Summary */}
+      {totalFiles > 0 && (
+        <div className="mt-4 pt-4 border-t border-border">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{totalFiles} document{totalFiles !== 1 ? 's' : ''} uploaded</span>
+            <span>{completedFiles} ready for AI analysis</span>
+          </div>
+          {completedFiles > 0 && (
+            <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+              <div 
+                className="bg-green-500 h-1.5 rounded-full transition-all duration-500"
+                style={{ width: `${(completedFiles / totalFiles) * 100}%` }}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

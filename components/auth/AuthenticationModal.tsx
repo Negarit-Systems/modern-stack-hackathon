@@ -3,7 +3,13 @@
 import React, { useState } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { authClient } from "@/app/lib/auth.client";
-import { Github } from "lucide-react";
+import animatedGoogle from "@/public/animations/google.json";
+import dynamic from 'next/dynamic'
+
+const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
+  ssr: false,
+  loading: () => <div className="w-[100px] h-[100px] bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+})
 
 interface AuthenticationModalProps {
   isOpen: boolean;
@@ -219,10 +225,15 @@ export default function AuthenticationModal({
             <button
               type="button"
               onClick={handleAuthSubmit}
-              className="w-full flex items-center justify-center gap-2 border border-border py-3 px-6 rounded-md hover:bg-accent transition-colors mb-2"
+              className="w-full flex items-center cursor-pointer justify-center gap-2 border border-border py-3 px-6 rounded-md hover:bg-accent transition-colors mb-2"
             >
               <span>
-                <Github className="w-4 h-4" />
+                <Player
+                  autoplay
+                  loop
+                  src={animatedGoogle}
+                  style={{ height: "40px", width: "40px" }}
+                />
               </span>
               Sign in with Google
             </button>

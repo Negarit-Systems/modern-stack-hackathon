@@ -30,6 +30,11 @@ export default function AIAssistant({ onQuery, session, loading }: AIAssistantPr
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    // When the server-side history updates, clear optimistic messages
+    setMessages([]);
+  }, [getChatbotHistory.length]);
+
   // Auto-scroll to bottom whenever messages change
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -47,17 +52,18 @@ export default function AIAssistant({ onQuery, session, loading }: AIAssistantPr
       pending: true,
     };
 
-    // Add user's message immediately
+    // Add user's message immediately for an optimistic update
     setMessages((prev) => [...prev, userMessage]);
     setQuery("");
 
     try {
-      onQuery(session._id, query);
+      await onQuery(session._id, query);
     } catch (err) {
+      // If the query fails, update the optimistic message to show an error
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === userMessage.id
-            ? { ...msg, response: "Error fetching response", pending: false }
+            ? { ...msg, response: "Error fetching response.", pending: false }
             : msg
         )
       );
@@ -65,12 +71,13 @@ export default function AIAssistant({ onQuery, session, loading }: AIAssistantPr
   };
 
   const renderMessages = () => {
-    const combinedMessages = [
+    const combinedMessages: ChatMessage[] = [
       ...getChatbotHistory.map((chat) => ({
         id: chat._id,
         prompt: chat.prompt,
         response: chat.response,
       })),
+      ...messages,
     ];
 
     if (combinedMessages.length === 0) {
@@ -95,10 +102,10 @@ export default function AIAssistant({ onQuery, session, loading }: AIAssistantPr
                 </div>
               </div>
             )}
-            {chat.response || (chat as ChatMessage).pending ? (
+            {chat.response || chat.pending ? (
               <div className="flex justify-start">
                 <div className="bg-gray-200 text-gray-800 rounded-lg p-3 max-w-[80%] break-words shadow-md">
-                  {(chat as ChatMessage).pending ? (
+                  {chat.pending ? (
                     <Loader2 className="animate-spin" size={20} />
                   ) : (
                     <ReactMarkdown>{chat.response!}</ReactMarkdown>

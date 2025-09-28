@@ -10,4 +10,7 @@ export const uploadSchema = {
   summary: v.optional(v.string()),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
+  parseStatus: v.optional(v.union(v.literal("pending"), v.literal("processing"), v.literal("completed"), v.literal("error"))),
+  parseError: v.optional(v.string()),
+  uploadProgress: v.optional(v.number()),
 };
