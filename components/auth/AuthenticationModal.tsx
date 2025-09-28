@@ -4,25 +4,34 @@ import React, { useState } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { authClient } from "@/app/lib/auth.client";
 import animatedGoogle from "@/public/animations/google.json";
-import dynamic from 'next/dynamic'
+import dynamic from "next/dynamic";
 
-const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
-  ssr: false,
-  loading: () => <div className="w-[100px] h-[100px] bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-})
+const Player = dynamic(
+  () => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-[100px] h-[100px] bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+    ),
+  }
+);
 
 interface AuthenticationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAuthenticated: (user: any) => void;
+  isSignUp: boolean;
+  setIsSignUp: (isSignUp: boolean) => void;
 }
 
 export default function AuthenticationModal({
   isOpen,
   onClose,
   onAuthenticated,
+  isSignUp = false,
+  setIsSignUp,
 }: AuthenticationModalProps) {
-  const [isSignUp, setIsSignUp] = useState(false);
+  // const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
