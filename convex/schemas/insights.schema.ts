@@ -5,7 +5,7 @@ export const insightsSchema = {
   topic: v.string(),
   urls: v.array(v.string()),
   uploadIds: v.array(v.id("uploads")),
-  scrapedDataIds: v.array(v.id("scrapedData")),
+  status: v.union(v.literal("active"), v.literal("archived")),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
 };

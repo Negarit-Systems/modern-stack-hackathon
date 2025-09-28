@@ -1,13 +1,13 @@
 "use client";
 
 import React, { ChangeEvent, useCallback, useState } from "react";
-import { 
-  ExternalLink, 
-  Upload, 
-  X, 
-  FileText, 
-  CheckCircle, 
-  AlertCircle, 
+import {
+  ExternalLink,
+  Upload,
+  X,
+  FileText,
+  CheckCircle,
+  AlertCircle,
   Loader2,
   Trash2,
   Play
@@ -17,7 +17,8 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import Markdown from "react-markdown";
 import Loading from "@/app/loading";
-import InsightDetailModal from "./InsightDetailModel";
+import InsightDetailModal from "./ScrapDataDetailModal";
+import WebInsights from "./WebInsights";
 
 interface UploadProps {
   onFileSelected?: (file: File) => void;
@@ -38,7 +39,7 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
   const deleteUpload = useMutation(api.crud.upload.deleteOne);
   const uploads = useQuery(api.crud.upload.getBySession, { sessionId });
   const processSingleFile = useAction(api.functions.processFile.processSingleFile);
-  
+
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [globalMessage, setGlobalMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
 
@@ -51,7 +52,7 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
 
     for (const file of files) {
       const uploadId = Date.now().toString() + Math.random();
-      
+
       // Add to uploading files
       setUploadingFiles(prev => [...prev, {
         id: uploadId,
@@ -67,7 +68,7 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
 
         // Simulate progress updates
         const progressInterval = setInterval(() => {
-          setUploadingFiles(prev => prev.map(f => 
+          setUploadingFiles(prev => prev.map(f =>
             f.id === uploadId ? { ...f, progress: Math.min(f.progress + 10, 90) } : f
           ));
         }, 200);
@@ -99,7 +100,7 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
         });
 
         // Complete upload
-        setUploadingFiles(prev => prev.map(f => 
+        setUploadingFiles(prev => prev.map(f =>
           f.id === uploadId ? { ...f, progress: 100, status: 'uploaded' } : f
         ));
 
@@ -108,20 +109,20 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
           try {
             const result = await processSingleFile({ uploadId: uploadRecord });
             if (result.success) {
-              setGlobalMessage({ 
-                type: 'success', 
-                text: `${file.name} has been processed and is ready for AI analysis!` 
+              setGlobalMessage({
+                type: 'success',
+                text: `${file.name} has been processed and is ready for AI analysis!`
               });
             } else {
-              setGlobalMessage({ 
-                type: 'error', 
-                text: `Failed to process ${file.name}: ${result.error}` 
+              setGlobalMessage({
+                type: 'error',
+                text: `Failed to process ${file.name}: ${result.error}`
               });
             }
           } catch (error) {
-            setGlobalMessage({ 
-              type: 'error', 
-              text: `Error processing ${file.name}` 
+            setGlobalMessage({
+              type: 'error',
+              text: `Error processing ${file.name}`
             });
           }
         }, 1000);
@@ -132,11 +133,11 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
         }, 3000);
 
       } catch (error) {
-        setUploadingFiles(prev => prev.map(f => 
-          f.id === uploadId ? { 
-            ...f, 
-            status: 'error', 
-            error: error instanceof Error ? error.message : 'Upload failed' 
+        setUploadingFiles(prev => prev.map(f =>
+          f.id === uploadId ? {
+            ...f,
+            status: 'error',
+            error: error instanceof Error ? error.message : 'Upload failed'
           } : f
         ));
       }
@@ -149,14 +150,14 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
   const handleDeleteFile = useCallback(async (uploadId: Id<"uploads">, fileName: string) => {
     try {
       await deleteUpload({ id: uploadId });
-      setGlobalMessage({ 
-        type: 'info', 
-        text: `${fileName} has been removed` 
+      setGlobalMessage({
+        type: 'info',
+        text: `${fileName} has been removed`
       });
     } catch (error) {
-      setGlobalMessage({ 
-        type: 'error', 
-        text: `Failed to remove ${fileName}` 
+      setGlobalMessage({
+        type: 'error',
+        text: `Failed to remove ${fileName}`
       });
     }
   }, [deleteUpload]);
@@ -165,20 +166,20 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
     try {
       const result = await processSingleFile({ uploadId });
       if (result.success) {
-        setGlobalMessage({ 
-          type: 'success', 
-          text: `${fileName} has been processed successfully!` 
+        setGlobalMessage({
+          type: 'success',
+          text: `${fileName} has been processed successfully!`
         });
       } else {
-        setGlobalMessage({ 
-          type: 'error', 
-          text: `Failed to process ${fileName}: ${result.error}` 
+        setGlobalMessage({
+          type: 'error',
+          text: `Failed to process ${fileName}: ${result.error}`
         });
       }
     } catch (error) {
-      setGlobalMessage({ 
-        type: 'error', 
-        text: `Error processing ${fileName}` 
+      setGlobalMessage({
+        type: 'error',
+        text: `Error processing ${fileName}`
       });
     }
   }, [processSingleFile]);
@@ -252,7 +253,7 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
           {globalMessage.type === 'error' && <AlertCircle size={16} />}
           {globalMessage.type === 'info' && <FileText size={16} />}
           <span>{globalMessage.text}</span>
-          <button 
+          <button
             onClick={() => setGlobalMessage(null)}
             className="ml-auto hover:opacity-70"
           >
@@ -269,13 +270,13 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium truncate">{uploadingFile.file.name}</span>
                 <span className="text-xs text-muted-foreground">
-                  {uploadingFile.status === 'uploading' ? `${uploadingFile.progress}%` : 
+                  {uploadingFile.status === 'uploading' ? `${uploadingFile.progress}%` :
                    uploadingFile.status === 'uploaded' ? 'Uploaded' : 'Error'}
                 </span>
               </div>
               {uploadingFile.status === 'uploading' && (
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-primary h-2 rounded-full transition-all duration-300"
                     style={{ width: `${uploadingFile.progress}%` }}
                   />
@@ -298,7 +299,7 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
               className="flex items-center gap-3 p-3 bg-card border rounded-lg hover:shadow-sm transition-all duration-200"
             >
               {getStatusIcon(upload.parseStatus)}
-              
+
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{upload.fileName}</p>
                 <p className="text-xs text-muted-foreground">
@@ -317,7 +318,7 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
                     <Play size={14} className="text-blue-600" />
                   </button>
                 )}
-                
+
                 {upload.url && (
                   <a
                     href={upload.url}
@@ -329,7 +330,7 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
                     <ExternalLink size={14} className="text-gray-600" />
                   </a>
                 )}
-                
+
                 <button
                   onClick={() => handleDeleteFile(upload._id, upload.fileName)}
                   className="p-1.5 hover:bg-red-100 rounded-md transition-colors"
@@ -361,7 +362,7 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
           </div>
           {completedFiles > 0 && (
             <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-              <div 
+              <div
                 className="bg-green-500 h-1.5 rounded-full transition-all duration-500"
                 style={{ width: `${(completedFiles / totalFiles) * 100}%` }}
               />
@@ -369,6 +370,7 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
           )}
         </div>
       )}
+      <WebInsights sessionId={sessionId}/>
     </div>
   );
 }
