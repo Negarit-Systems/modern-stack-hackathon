@@ -56,33 +56,42 @@ const geminiAdapter: AiProvider = {
   },
 
   callFunction: async (prompt: string, functions: any[], context?: string): Promise<any> => {
-    console.log("Gemini API: Calling function...");
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY not found in environment variables");
-    }
+      console.log("Gemini API: Calling function...");
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("GEMINI_API_KEY not found in environment variables");
+      }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: GEMINI_MODEL,
-      tools: functions,
-    });
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({
+        model: GEMINI_MODEL,
+        tools: functions,
+      });
 
-    const fullPrompt = context
-      ? `Based on this context: ${context}\n\nUser's question: ${prompt}`
-      : prompt;
+      const fullPrompt = context
+        ? `Based on this context: ${context}\n\nUser's question: ${prompt}`
+        : prompt;
 
-    const chat = model.startChat();
-    const result = await chat.sendMessage(fullPrompt);
-    const response = result.response;
+      const chat = model.startChat();
+      const result = await chat.sendMessage(fullPrompt);
+      const response = result.response;
 
-    const toolCall = response.functionCalls();
-    if (toolCall) {
-      return { tool_call: { function: toolCall } };
-    }
-    return response;
-  },
+      const toolCalls = response.functionCalls();
+      if (toolCalls && toolCalls.length > 0) {
+        const toolCall = toolCalls[0];
+        return {
+          tool_call: {
+            function: {
+              name: toolCall.name,
+              args: toolCall.args,
+            },
+          },
+        };
+      }
 
+      return { text: response.text() || "No response from Gemini." };
+    },
 };
+
 
 export { geminiAdapter };

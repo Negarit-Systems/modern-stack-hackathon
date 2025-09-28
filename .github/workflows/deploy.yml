@@ -24,6 +24,12 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Deploy Convex Backend
+        run: npx convex deploy
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
+
       - name: Run Convex Codegen
         run: |
           echo "CONVEX_TOKEN=${{ secrets.CONVEX_ACCESS_TOKEN }}" >> $GITHUB_ENV
@@ -31,12 +37,6 @@ jobs:
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
-          CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
-
-      - name: Deploy Convex Backend
-        run: npx convex deploy
-        env:
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
           CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
 
       - name: Build Next.js App

@@ -15,6 +15,9 @@ import {
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import Markdown from "react-markdown";
+import Loading from "@/app/loading";
+import InsightDetailModal from "./InsightDetailModel";
 
 interface UploadProps {
   onFileSelected?: (file: File) => void;
