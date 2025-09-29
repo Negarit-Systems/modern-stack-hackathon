@@ -2,6 +2,7 @@ import { Resend } from "resend";
 
 // Initialize Resend with API key from environment
 const resend = new Resend(process.env.RESEND_API_KEY);
+console.log(resend);
 
 export interface EmailInviteData {
   to: string;
@@ -136,7 +137,7 @@ export async function sendInviteEmail(
     const emailTemplate = getInviteEmailTemplate(templateData);
 
     const result = await resend.emails.send({
-      from: "AI Research Copilot <noreply@resend.dev>", // You'll need to verify your domain
+      from: "noreply@negaritsystems.com.et", 
       to: [data.to],
       subject: emailTemplate.subject,
       html: emailTemplate.html,
