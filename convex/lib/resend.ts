@@ -63,37 +63,37 @@ export function getInviteEmailTemplate(data: EmailTemplateData) {
               <h1 style="margin: 0; font-size: 24px;">Research Session Invitation</h1>
               <p style="margin: 10px 0 0 0; opacity: 0.9;">You've been invited to collaborate</p>
             </div>
-            
+
             <div class="content">
               <h2 style="margin-top: 0;">Hello!</h2>
               <p><strong>${inviterName}</strong> has invited you to ${roleText} a research session.</p>
-              
+
               <div class="session-info">
                 <h3 style="margin: 0 0 10px 0; color: #495057;">${sessionTitle}</h3>
                 <p style="margin: 0; color: #6c757d;">
                   Role: <span class="role-badge">${role === "editor" ? "Editor" : "Viewer"}</span>
                 </p>
               </div>
-              
+
               <p>Click the button below to accept the invitation and join the session:</p>
-              
+
               <div style="text-align: center;">
                 <a href="${sessionUrl}" class="button">${actionText}</a>
               </div>
-              
+
               <p style="font-size: 14px; color: #6c757d; margin-top: 30px;">
                 If the button doesn't work, you can copy and paste this link into your browser:<br>
                 <a href="${sessionUrl}" style="color: #667eea; word-break: break-all;">${sessionUrl}</a>
               </p>
-              
+
               <hr style="border: none; border-top: 1px solid #e1e5e9; margin: 30px 0;">
-              
+
               <p style="font-size: 14px; color: #6c757d;">
-                This invitation was sent by ${inviterName}. If you weren't expecting this invitation, 
+                This invitation was sent by ${inviterName}. If you weren't expecting this invitation,
                 you can safely ignore this email.
               </p>
             </div>
-            
+
             <div class="footer">
               <p>This invitation was sent from AI Research Copilot</p>
               <p style="margin: 5px 0 0 0; font-size: 12px;">
@@ -137,7 +137,7 @@ export async function sendInviteEmail(
     const emailTemplate = getInviteEmailTemplate(templateData);
 
     const result = await resend.emails.send({
-      from: "noreply@negaritsystems.com.et", 
+      from: "AI Research Copilot <noreply@negaritsystems.com.et>",
       to: [data.to],
       subject: emailTemplate.subject,
       html: emailTemplate.html,

@@ -10,7 +10,6 @@ import { uploadSchema } from "./upload.schema";
 import { uploadEmbeddingsSchema } from "./uploadEmbeddings.schema";
 import { insightsSchema } from "./insights.schema";
 import { testSchema } from "./testing.schema";
-import { userSchema } from "./users.schema";
 
 export {
   chatbotSchema,
@@ -25,5 +24,4 @@ export {
   insightsSchema,
   whiteboardsSchema,
   testSchema,
-  userSchema,
 };
