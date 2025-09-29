@@ -31,6 +31,7 @@ import type * as functions_emailInvites from "../functions/emailInvites.js";
 import type * as functions_processFile from "../functions/processFile.js";
 import type * as functions_scrapeAndStore from "../functions/scrapeAndStore.js";
 import type * as http from "../http.js";
+import type * as lib_emailTemplate from "../lib/emailTemplate.js";
 import type * as lib_firecrawl from "../lib/firecrawl.js";
 import type * as lib_resend from "../lib/resend.js";
 import type * as schemas_index from "../schemas/index.js";
@@ -75,6 +76,7 @@ declare const fullApi: ApiFromModules<{
   "functions/processFile": typeof functions_processFile;
   "functions/scrapeAndStore": typeof functions_scrapeAndStore;
   http: typeof http;
+  "lib/emailTemplate": typeof lib_emailTemplate;
   "lib/firecrawl": typeof lib_firecrawl;
   "lib/resend": typeof lib_resend;
   "schemas/index": typeof schemas_index;

@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
 import { X, Mail, UserPlus, Trash2 } from "lucide-react";
@@ -35,7 +35,7 @@ export default function InviteModal({
   const sendBatchInvites = useMutation(
     api.functions.emailInvites.sendBatchInvites
   );
-  const resendInvite = useMutation(api.functions.emailInvites.resendInvite);
+  const resendInvite = useAction(api.functions.emailInvites.resendInvite);
   const cancelInvite = useMutation(api.functions.emailInvites.cancelInvite);
 
   // Track loading/error for individual invite actions
@@ -106,8 +106,8 @@ export default function InviteModal({
     try {
       await resendInvite({
         inviteId: invite._id,
-        inviterName: "", // Optionally pass inviterName if available
-        sessionTitle: "", // Optionally pass sessionTitle if available
+        inviterName: "",
+        sessionTitle: "",
       });
     } catch (err: any) {
       setInviteActionError(

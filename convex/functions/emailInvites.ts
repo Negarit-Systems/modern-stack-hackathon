@@ -1,7 +1,7 @@
 // convex/emailinvites.ts
 
 import { v } from "convex/values";
-import { mutation, query } from "../_generated/server";
+import { action, mutation, query } from "../_generated/server";
 import { api } from "../_generated/api";
 import {
   sendInviteEmail,
@@ -9,8 +9,6 @@ import {
   EmailInviteData,
 } from "../lib/resend";
 
-// Helper function to get the authenticated user to avoid repetition
-// This is a common pattern when you need user data in many mutations.
 import type { Id } from "../_generated/dataModel";
 import type { QueryCtx, MutationCtx } from "../_generated/server";
 
@@ -172,60 +170,51 @@ export const sendBatchInvites = mutation({
   },
 });
 
-// Resend an invitation email
-export const resendInvite = mutation({
+export const resendInvite = action({
   args: {
     inviteId: v.id("invites"),
     inviterName: v.string(),
     sessionTitle: v.string(),
   },
-  handler: async (
-    ctx: MutationCtx,
-    {
-      inviteId,
-      inviterName,
-      sessionTitle,
-    }: {
-      inviteId: Id<"invites">;
-      inviterName: string;
-      sessionTitle: string;
-    }
-  ): Promise<{ emailResult: Awaited<ReturnType<typeof sendInviteEmail>> }> => {
-    const user: User = await getAuthenticatedUser(ctx);
-    const invite = await ctx.db.get(inviteId);
-    if (!invite) {
-      throw new Error("Invite not found");
-    }
-    // Type assertion to help TypeScript know this is an invite
+  handler: async (ctx, { inviteId, inviterName, sessionTitle }) => {
+    const user = await getAuthenticatedUser(ctx);
+
+    const invite = await ctx.runQuery(api.crud.invite.getOne, { id: inviteId });
+    if (!invite) throw new Error("Invite not found");
+
     const inviteTyped = invite as {
       email: string;
       sessionId: Id<"sessions">;
       role: "editor" | "viewer";
       invitedBy: string;
     };
+
     if (inviteTyped.invitedBy !== user._id) {
       throw new Error("Not authorized to resend this invite");
     }
-    const emailData: EmailInviteData = {
-      to: invite.email,
+
+    // call external API directly here
+    const emailResult = await sendInviteEmail({
+      to: inviteTyped.email,
       inviterName,
       sessionTitle,
       sessionId: inviteTyped.sessionId,
       role: inviteTyped.role,
       inviteId: inviteId.toString(),
-    };
-    const emailResult = await sendInviteEmail(emailData);
+    });
+
     if (!emailResult.success) {
       throw new Error(`Failed to resend email: ${emailResult.error}`);
     }
-    await ctx.db.patch(inviteId, {
-      updatedAt: Date.now(),
+    // optional DB update
+    await ctx.runMutation(api.crud.invite.update, {
+      id: inviteId,
+      updates: {updatedAt: Date.now()}
     });
-    return {
-      emailResult,
-    };
+    return { emailResult };
   },
 });
+
 
 // Get invites for a session (NO CHANGE NEEDED HERE)
 export const getSessionInvites = query({
