@@ -38,8 +38,12 @@ export default function Sidebar({
         <div className="flex items-center justify-between">
           {!collapsed && (
             <div>
-              <h2 className="font-semibold text-sm text-muted-foreground">Research Session</h2>
-              <p className="text-xs text-muted-foreground truncate">{session?.topic}</p>
+              <h2 className="font-semibold text-sm text-muted-foreground">
+                Research Session
+              </h2>
+              <p className="text-xs text-muted-foreground truncate">
+                {session?.topic}
+              </p>
             </div>
           )}
           <button
@@ -54,12 +58,14 @@ export default function Sidebar({
       {/* Sidebar Content */}
       {!collapsed && (
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <AIAssistant onQuery={onChatbotQuery} session={session} loading={loading} />
-          <TeamChat messages={messages} onSendMessage={onSendMessage} user={user} />
-          <CollaboratorsList collaborators={collaborators} />
-          <RecentInsights
-            sessionId={session._id}
+          <AIAssistant
+            onQuery={onChatbotQuery}
+            session={session}
+            loading={loading}
           />
+          <TeamChat user={user} />
+          <CollaboratorsList collaborators={collaborators} />
+          <RecentInsights sessionId={session._id} />
         </div>
       )}
     </div>
