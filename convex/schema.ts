@@ -41,4 +41,5 @@ export default defineSchema({
     "sessionId",
   ]),
   testSchema: defineTable(schemas.testSchema),
+  users: defineTable(schemas.userSchema).index("by_email", ["email"]),
 });
