@@ -1,6 +1,7 @@
 import { chatbotSchema } from "./chatBot.schema";
 import { commentSchema } from "./comment.schema";
 import { documentSchema } from "./document.schema";
+import { whiteboardsSchema } from "./whiteboard.schema";
 import { groupChatSchema } from "./groupChat.schema";
 import { inviteSchema } from "./invite.schema";
 import { scrapedDataSchema } from "./scrapedData.schema";
@@ -21,5 +22,6 @@ export {
   uploadSchema,
   uploadEmbeddingsSchema,
   insightsSchema,
+  whiteboardsSchema,
   testSchema,
 };

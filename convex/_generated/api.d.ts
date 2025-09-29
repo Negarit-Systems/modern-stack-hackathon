@@ -25,6 +25,7 @@ import type * as crud_test from "../crud/test.js";
 import type * as crud_upload from "../crud/upload.js";
 import type * as crud_uploadEmbedding from "../crud/uploadEmbedding.js";
 import type * as crud_users from "../crud/users.js";
+import type * as crud_whiteboard from "../crud/whiteboard.js";
 import type * as functions_ai from "../functions/ai.js";
 import type * as functions_processFile from "../functions/processFile.js";
 import type * as functions_scrapeAndStore from "../functions/scrapeAndStore.js";
@@ -66,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   "crud/upload": typeof crud_upload;
   "crud/uploadEmbedding": typeof crud_uploadEmbedding;
   "crud/users": typeof crud_users;
+  "crud/whiteboard": typeof crud_whiteboard;
   "functions/ai": typeof functions_ai;
   "functions/processFile": typeof functions_processFile;
   "functions/scrapeAndStore": typeof functions_scrapeAndStore;
