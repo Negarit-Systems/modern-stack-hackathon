@@ -60,3 +60,17 @@ export const deleteOne = mutation({
     await ctx.db.delete(id);
   },
 });
+
+export const deleteByUploadId = mutation({
+  args: { uploadId: v.id("uploads") },
+  handler: async (ctx, { uploadId }) => {
+    const items = await ctx.db
+      .query("uploadEmbeddings")
+      .filter(q => q.eq(q.field("uploadId"), uploadId))
+      .collect();
+
+    for (const item of items) {
+      await ctx.db.delete(item._id);
+    }
+  },
+});

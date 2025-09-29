@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { authenticatedUser, makePartial } from "../utils/utils";
 import { uploadSchema } from "../schemas";
+import { api } from "../_generated/api";
 
 // QUERIES
 export const get = query({
@@ -58,6 +59,11 @@ export const update = mutation({
 export const deleteOne = mutation({
   args: { id: v.id("uploads") },
   handler: async (ctx, { id }) => {
+    const upload = await ctx.db.get(id);
+    if (upload?.storageId) {
+      await ctx.storage.delete(upload.storageId);
+    }
+    await ctx.runMutation(api.crud.uploadEmbedding.deleteByUploadId, { uploadId: id });
     await ctx.db.delete(id);
   },
 });

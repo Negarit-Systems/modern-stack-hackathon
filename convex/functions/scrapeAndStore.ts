@@ -30,11 +30,16 @@ export const scrapeUrls = action({
       }
     );
 
-    if (!Array.isArray(urls) || urls.length === 0) {
+    const urlList = [
+      ...(customUrls ?? []),
+      ...(Array.isArray(urls) ? urls : []),
+    ];
+
+    if (urlList.length === 0) {
       throw new Error("No URLs generated for scraping");
     }
 
-    return await firecrawl.batchScrape([...(customUrls ?? []), ...urls], {
+    return await firecrawl.batchScrape(urlList, {
         options: {
           formats: [
             {
