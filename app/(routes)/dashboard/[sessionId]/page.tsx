@@ -29,7 +29,10 @@ export default function ResearchDashboard() {
   // Actions
   const handleChatbotQueryRaw = useAction(api.functions.ai.handleUserQuery);
 
-  const handleChatbotQuery = async(sessionId: Id<"sessions">, prompt: string) => {
+  const handleChatbotQuery = async (
+    sessionId: Id<"sessions">,
+    prompt: string
+  ) => {
     return await handleChatbotQueryRaw({ sessionId, prompt });
   };
 
@@ -38,21 +41,20 @@ export default function ResearchDashboard() {
       try {
         await updateDocument({
           id: document._id,
-          updates: { content }
+          updates: { content },
         });
       } catch (error) {
-        console.error('Error updating document:', error);
+        console.error("Error updating document:", error);
       }
     }
   };
-
 
   // to be replaced with real data fetching
   const [summaries, setSummaries] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [comments, setComments] = useState<any[]>([]);
 
-  const [collaborators, setCollaborators] = useState([])
+  const [collaborators, setCollaborators] = useState([]);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -185,5 +187,5 @@ export default function ResearchDashboard() {
         comments={comments}
       /> */}
     </div>
-  ): null;
+  ) : null;
 }
