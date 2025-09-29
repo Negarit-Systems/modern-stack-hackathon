@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Plus, Layout, ChevronDown } from "lucide-react";
+import { Plus, Layout, ChevronDown, X } from "lucide-react";
 
 interface WhiteboardSwitcherProps {
   sessionId: Id<"sessions">;
@@ -18,20 +18,22 @@ export default function WhiteboardSwitcher({
   onWhiteboardChange
 }: WhiteboardSwitcherProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
 
   const whiteboards = useQuery(api.crud.whiteboard.getBySession, { sessionId });
   const createWhiteboard = useMutation(api.crud.whiteboard.create);
 
   const handleCreateWhiteboard = async () => {
-    const title = prompt("Enter whiteboard title:");
-    if (title) {
-      const newWbId = await createWhiteboard({
-        sessionId,
-        title: title || "Untitled Whiteboard"
-      });
-      onWhiteboardChange(newWbId);
-      setIsOpen(false);
-    }
+    if (!newTitle.trim()) return;
+    const newDocId = await createWhiteboard({
+      sessionId,
+      title: newTitle.trim(),
+    });
+    onWhiteboardChange(newDocId);
+    setIsCreating(false);
+    setNewTitle("");
+    setIsOpen(false);
   };
 
   const activeWhiteboard = whiteboards?.find(wb => wb._id === activeWhiteboardId);
@@ -50,15 +52,43 @@ export default function WhiteboardSwitcher({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+        <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
           <div className="p-2 border-b border-gray-200">
-            <button
-              onClick={handleCreateWhiteboard}
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md"
-            >
-              <Plus size={16} />
-              Create New Whiteboard
-            </button>
+            {!isCreating ? (
+              <button
+                onClick={() => setIsCreating(true)}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md"
+              >
+                <Plus size={16} />
+                Create New Whiteboard
+              </button>
+           ) : (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setIsCreating(false);
+                  setNewTitle("");
+                }}
+                className="p-1 text-gray-500 hover:text-gray-700"
+              >
+                <X size={12} />
+              </button>
+              <input
+                type="text"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="Title"
+                className="w-38 px-1 py-1 border rounded-md text-sm"
+              />
+              <button
+                onClick={handleCreateWhiteboard}
+                className="px-2 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              >
+                Save
+              </button>
+
+            </div>
+            )}
           </div>
 
           <div className="max-h-60 overflow-y-auto">

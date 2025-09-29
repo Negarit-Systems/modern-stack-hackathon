@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { TextInputModal } from "../ui/InputModal";
 
 interface WhiteboardCanvasProps {
   whiteboardId?: Id<"whiteboards">;
@@ -64,6 +65,8 @@ export default function WhiteboardCanvas({ whiteboardId }: WhiteboardCanvasProps
   const [isSelecting, setIsSelecting] = useState(false);
   const [color, setColor] = useState("#000000");
   const [strokeWidth, setStrokeWidth] = useState(2);
+  const [isTextModalOpen, setIsTextModalOpen] = useState(false);
+  const [textPosition, setTextPosition] = useState<Point | null>(null);
 
   // Convex data
   const whiteboard = useQuery(api.crud.whiteboard.get, {
@@ -138,6 +141,7 @@ export default function WhiteboardCanvas({ whiteboardId }: WhiteboardCanvasProps
         return null;
     }
   }, []);
+
 
   const isPointInElement = useCallback((element: WhiteboardElement, x: number, y: number): boolean => {
     const bbox = getElementBoundingBox(element);
@@ -251,18 +255,8 @@ export default function WhiteboardCanvas({ whiteboardId }: WhiteboardCanvasProps
         });
         break;
       case "text":
-        const text = prompt("Enter text:");
-        if (text && whiteboard) {
-          addElement({
-            type: "text",
-            id: `element-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            x,
-            y,
-            text,
-            fontSize: 16,
-            fill: color,
-          });
-        }
+        setTextPosition({ x, y });
+        setIsTextModalOpen(true);
         setIsDrawing(false);
         break;
     }
@@ -360,6 +354,21 @@ export default function WhiteboardCanvas({ whiteboardId }: WhiteboardCanvasProps
       setIsSelecting(false);
     }
   }, [tool]);
+
+  const handleTextSubmit = useCallback((text: string) => {
+    if (text && whiteboard && textPosition) {
+      addElement({
+        type: "text",
+        id: `element-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        x: textPosition.x,
+        y: textPosition.y,
+        text,
+        fontSize: 16,
+        fill: color,
+      });
+    }
+    setTextPosition(null);
+  }, [whiteboard, textPosition, color, addElement]);
 
   // Render whiteboard
   useEffect(() => {
@@ -596,6 +605,12 @@ export default function WhiteboardCanvas({ whiteboardId }: WhiteboardCanvasProps
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
           className="cursor-crosshair bg-white"
+        />
+
+        <TextInputModal
+          isOpen={isTextModalOpen}
+          onSubmit={handleTextSubmit}
+          onClose={() => setIsTextModalOpen(false)}
         />
       </div>
     </div>
