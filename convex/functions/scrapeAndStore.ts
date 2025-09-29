@@ -77,7 +77,7 @@ export const scrapAndStoreInsights = action({
       {
         item: {
           sessionId: sessionId,
-          topic: topic ?? "Not Specified",
+          topic: topic ?? "Untitled",
           urls: customUrls || [],
           uploadIds: uploads.map(u => u._id),
           status: "active",
@@ -93,10 +93,10 @@ export const scrapAndStoreInsights = action({
       const parsedItem = firecrawlResponseSchema.parse(item.json);
       if (
         !parsedItem ||
-        (parsedItem.content && parsedItem.content.includes("404")) ||
-        (parsedItem.content && parsedItem.content.includes("not found")) ||
-        (parsedItem.content && parsedItem.content.includes("error")) ||
         (parsedItem.content && parsedItem.content.length < 20) ||
+        (parsedItem.title && parsedItem.title.includes("404")) ||
+        (parsedItem.title && parsedItem.title.includes("not found")) ||
+        (parsedItem.title && parsedItem.title.includes("error")) ||
         (parsedItem.url && parsedItem.url.length < 10)
       ) {
         continue;
