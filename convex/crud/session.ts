@@ -40,11 +40,22 @@ export const create = mutation({
   args: { item: v.object(sessionSchema) },
   handler: async (ctx, { item }) => {
     const id = await ctx.db.insert("sessions", item);
-    await ctx.runMutation(api.crud.document.create, {
-      item: {
-        sessionId: id,
-        content: "",
-      }
+    // Create default document
+    await ctx.db.insert("documents", {
+      sessionId: id,
+      title: "Main Document",
+      content: "",
+      updatedAt: Date.now(),
+      order: 0,
+    });
+
+    // Create default whiteboard
+    await ctx.db.insert("whiteboards", {
+      sessionId: id,
+      title: "Main Whiteboard",
+      elements: [],
+      updatedAt: Date.now(),
+      order: 0,
     });
     return id;
   },

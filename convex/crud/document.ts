@@ -17,7 +17,8 @@ export const getBySession = query({
     const item = await ctx.db
       .query("documents")
       .withIndex("by_sessionId", (q) => q.eq("sessionId", sessionId))
-      .first();
+      .order("asc")
+      .collect();
     return item;
   },
 });
@@ -32,10 +33,23 @@ export const getOne = query({
 
 // MUTATIONS
 export const create = mutation({
-  args: { item: v.object(documentSchema) },
-  handler: async (ctx, { item }) => {
-    const id = await ctx.db.insert("documents", item);
-    return id;
+  args: { sessionId: v.id("sessions"), title: v.optional(v.string()) },
+  handler: async (ctx, { sessionId, title = "Untitled Document" }) => {
+    // Get the highest order number
+    const documents = await ctx.db
+      .query("documents")
+      .withIndex("by_sessionId", (q) => q.eq("sessionId", sessionId))
+      .collect();
+
+    const highestOrder = documents.reduce((max, doc) => Math.max(max, doc.order), -1);
+
+    return await ctx.db.insert("documents", {
+      sessionId,
+      title,
+      content: "",
+      updatedAt: Date.now(),
+      order: highestOrder + 1,
+    });
   },
 });
 
