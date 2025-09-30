@@ -300,29 +300,29 @@ export default function RichTextEditor({
   }, [restoreCursorPosition]);
 
   return (
-    <div className="border border-border rounded-lg overflow-hidden bg-card" style={{ minHeight: "850px" }}>
+    <div className="border border-gray-300 dark:border-slate-600 rounded-lg overflow-hidden bg-white dark:bg-slate-800" style={{ minHeight: "850px" }}>
       {/* Toolbar */}
-      <div className="border-b border-border p-3 bg-muted/30">
+      <div className="border-b border-gray-300 dark:border-slate-600 p-3 bg-gray-50 dark:bg-slate-700">
         <div className="flex flex-wrap items-center gap-1">
           {/* Text Formatting */}
           <div className="flex items-center gap-1 pr-3 border-r border-border">
             <button
               onClick={() => formatText("bold")}
-              className="p-2 hover:bg-accent rounded-md"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md"
               title="Bold"
             >
               <Bold size={16} />
             </button>
             <button
               onClick={() => formatText("italic")}
-              className="p-2 hover:bg-accent rounded-md"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md"
               title="Italic"
             >
               <Italic size={16} />
             </button>
             <button
               onClick={() => formatText("underline")}
-              className="p-2 hover:bg-accent rounded-md"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md"
               title="Underline"
             >
               <Underline size={16} />
@@ -333,21 +333,21 @@ export default function RichTextEditor({
           <div className="flex items-center gap-1 pr-3 border-r border-border">
             <button
               onClick={() => formatText("insertUnorderedList")}
-              className="p-2 hover:bg-accent rounded-md"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md"
               title="Bullet List"
             >
               <List size={16} />
             </button>
             <button
               onClick={() => formatText("insertOrderedList")}
-              className="p-2 hover:bg-accent rounded-md"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md"
               title="Numbered List"
             >
               <ListOrdered size={16} />
             </button>
             <button
               onClick={() => formatText("formatBlock", "blockquote")}
-              className="p-2 hover:bg-accent rounded-md"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md"
               title="Quote"
             >
               <Quote size={16} />
@@ -358,21 +358,21 @@ export default function RichTextEditor({
           <div className="flex items-center gap-1 pr-3 border-r border-border">
             <button
               onClick={() => formatText("justifyLeft")}
-              className="p-2 hover:bg-accent rounded-md"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md"
               title="Align Left"
             >
               <AlignLeft size={16} />
             </button>
             <button
               onClick={() => formatText("justifyCenter")}
-              className="p-2 hover:bg-accent rounded-md"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md"
               title="Align Center"
             >
               <AlignCenter size={16} />
             </button>
             <button
               onClick={() => formatText("justifyRight")}
-              className="p-2 hover:bg-accent rounded-md"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md"
               title="Align Right"
             >
               <AlignRight size={16} />
@@ -384,7 +384,7 @@ export default function RichTextEditor({
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploadingImage}
-              className={`p-2 hover:bg-accent rounded-md ${isUploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md ${isUploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
               title={isUploadingImage ? "Uploading..." : "Insert Image"}
             >
               {isUploadingImage ? (
@@ -395,7 +395,7 @@ export default function RichTextEditor({
             </button>
             <button
               onClick={() => setShowGraphModal(true)}
-              className="p-2 hover:bg-accent rounded-md"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md"
               title="Insert Graph"
             >
               <BarChart3 size={16} />
@@ -405,7 +405,7 @@ export default function RichTextEditor({
                 const url = prompt("Enter URL:");
                 if (url) formatText("createLink", url);
               }}
-              className="p-2 hover:bg-accent rounded-md"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md"
               title="Insert Link"
             >
               <Link size={16} />

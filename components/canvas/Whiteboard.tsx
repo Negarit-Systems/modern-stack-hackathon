@@ -68,6 +68,16 @@ export default function WhiteboardCanvas({ whiteboardId }: WhiteboardCanvasProps
   const [isTextModalOpen, setIsTextModalOpen] = useState(false);
   const [textPosition, setTextPosition] = useState<Point | null>(null);
 
+  // Update default color based on theme
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    if (isDark && color === '#000000') {
+      setColor('#ffffff');
+    } else if (!isDark && color === '#ffffff') {
+      setColor('#000000');
+    }
+  }, [color]);
+
   // Convex data
   const whiteboard = useQuery(api.crud.whiteboard.get, {
     id: whiteboardId
@@ -297,6 +307,22 @@ export default function WhiteboardCanvas({ whiteboardId }: WhiteboardCanvasProps
     }
   }, [isDrawing, currentElement, isSelecting, selectionBox]);
 
+  const addElement = useCallback(async (element: WhiteboardElement) => {
+    if (!whiteboard) return;
+
+    try {
+      await updateWhiteboard({
+        id: whiteboard._id,
+        updates: {
+          elements: [...whiteboard.elements, element],
+          updatedAt: Date.now(),
+        }
+      });
+    } catch (error) {
+      console.error('Error updating whiteboard:', error);
+    }
+  }, [whiteboard, updateWhiteboard]);
+
   const stopDrawing = useCallback(() => {
     // Handle selection box completion
     if (isSelecting && selectionBox && whiteboard) {
@@ -328,23 +354,7 @@ export default function WhiteboardCanvas({ whiteboardId }: WhiteboardCanvasProps
     }
     setIsDrawing(false);
     setCurrentElement(null);
-  }, [isSelecting, selectionBox, whiteboard, selectedElements, isElementInSelectionBox, currentElement, tool]);
-
-  const addElement = useCallback(async (element: WhiteboardElement) => {
-    if (!whiteboard) return;
-
-    try {
-      await updateWhiteboard({
-        id: whiteboard._id,
-        updates: {
-          elements: [...whiteboard.elements, element],
-          updatedAt: Date.now(),
-        }
-      });
-    } catch (error) {
-      console.error('Error updating whiteboard:', error);
-    }
-  }, [whiteboard, updateWhiteboard]);
+  }, [isSelecting, selectionBox, whiteboard, selectedElements, isElementInSelectionBox, currentElement, tool, addElement]);
 
   // Clear selection when switching away from select tool
   useEffect(() => {
@@ -522,39 +532,39 @@ export default function WhiteboardCanvas({ whiteboardId }: WhiteboardCanvasProps
   }, [whiteboard, currentElement, selectedElements, isSelecting, selectionBox]);
 
   return (
-    <div className="flex flex-col h-full bg-white border border-gray-300 rounded-lg">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg">
       {/* Toolbar */}
-      <div className="flex items-center gap-2 p-3 border-b border-gray-300 bg-gray-50">
+      <div className="flex items-center gap-2 p-3 border-b border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700">
         <button
           onClick={() => {
             setTool("select");
             setSelectedElements(new Set());
           }}
-          className={`p-2 rounded ${tool === "select" ? "bg-blue-500 text-white" : "bg-white"}`}
+          className={`p-2 rounded ${tool === "select" ? "bg-blue-500 text-white" : "bg-white dark:bg-slate-600 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-500"}`}
         >
           Select
         </button>
         <button
           onClick={() => setTool("pen")}
-          className={`p-2 rounded ${tool === "pen" ? "bg-blue-500 text-white" : "bg-white"}`}
+          className={`p-2 rounded ${tool === "pen" ? "bg-blue-500 text-white" : "bg-white dark:bg-slate-600 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-500"}`}
         >
           Pen
         </button>
         <button
           onClick={() => setTool("rectangle")}
-          className={`p-2 rounded ${tool === "rectangle" ? "bg-blue-500 text-white" : "bg-white"}`}
+          className={`p-2 rounded ${tool === "rectangle" ? "bg-blue-500 text-white" : "bg-white dark:bg-slate-600 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-500"}`}
         >
           Rectangle
         </button>
         <button
           onClick={() => setTool("ellipse")}
-          className={`p-2 rounded ${tool === "ellipse" ? "bg-blue-500 text-white" : "bg-white"}`}
+          className={`p-2 rounded ${tool === "ellipse" ? "bg-blue-500 text-white" : "bg-white dark:bg-slate-600 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-500"}`}
         >
           Ellipse
         </button>
         <button
           onClick={() => setTool("text")}
-          className={`p-2 rounded ${tool === "text" ? "bg-blue-500 text-white" : "bg-white"}`}
+          className={`p-2 rounded ${tool === "text" ? "bg-blue-500 text-white" : "bg-white dark:bg-slate-600 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-500"}`}
         >
           Text
         </button>
@@ -569,7 +579,7 @@ export default function WhiteboardCanvas({ whiteboardId }: WhiteboardCanvasProps
           <select
             value={strokeWidth}
             onChange={(e) => setStrokeWidth(Number(e.target.value))}
-            className="border rounded px-2 py-1"
+            className="border rounded px-2 py-1 bg-white dark:bg-slate-600 text-gray-900 dark:text-white border-gray-300 dark:border-slate-500"
           >
             <option value={1}>Thin</option>
             <option value={2}>Medium</option>
@@ -588,7 +598,7 @@ export default function WhiteboardCanvas({ whiteboardId }: WhiteboardCanvasProps
           </button>
         )}
 
-        <div className="ml-4 text-sm text-gray-600">
+        <div className="ml-4 text-sm text-gray-600 dark:text-slate-300">
           {whiteboard?.elements.length || 0} elements
           {selectedElements.size > 0 && ` • ${selectedElements.size} selected`}
         </div>
@@ -604,7 +614,7 @@ export default function WhiteboardCanvas({ whiteboardId }: WhiteboardCanvasProps
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
-          className="cursor-crosshair bg-white"
+          className="cursor-crosshair bg-white dark:bg-slate-800"
         />
 
         <TextInputModal
