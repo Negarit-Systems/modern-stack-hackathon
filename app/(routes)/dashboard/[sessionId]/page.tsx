@@ -38,7 +38,11 @@ export default function ResearchDashboard() {
   const session = useQuery(api.crud.session.getOne, { id: sessionId });
   const documents = useQuery(api.crud.document.getBySession, { sessionId });
   const whiteboards = useQuery(api.crud.whiteboard.getBySession, { sessionId });
-  const updateDocument = useMutation(api.crud.document.update);
+
+  // Mutations
+  const createComment = useMutation(api.crud.comment.create);
+  const updateComment = useMutation(api.crud.comment.update);
+  const deleteComment = useMutation(api.crud.comment.deleteOne);
 
   // Set default active items when data loads
   useEffect(() => {
@@ -53,6 +57,13 @@ export default function ResearchDashboard() {
   // Get active document and whiteboard
   const activeDocument = documents?.find(doc => doc._id === activeDocumentId);
   const activeWhiteboard = whiteboards?.find(wb => wb._id === activeWhiteboardId);
+  const updateDocument = useMutation(api.crud.document.update);
+
+  // Get comments for active document
+  const comments = useQuery(
+    api.crud.comment.getByDocumentId,
+    activeDocumentId ? { documentId: activeDocumentId } : "skip"
+  ) || [];
 
   // Actions
   const handleChatbotQueryRaw = useAction(api.functions.ai.handleUserQuery);
@@ -80,7 +91,6 @@ export default function ResearchDashboard() {
   // to be replaced with real data fetching
   const [summaries, setSummaries] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
-  const [comments, setComments] = useState<any[]>([]);
 
   const [collaborators, setCollaborators] = useState([]);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -95,52 +105,67 @@ export default function ResearchDashboard() {
     }
   }, [router, isAuthLoading, user]);
 
-  const handleAddComment = (
+  const handleAddComment = async (
     content: string,
-    position?: { x: number; y: number }
+    position: { y: number }
   ) => {
-    if (!content.trim() || !user) return;
-
-    const comment = {
-      id: Date.now().toString(),
-      userId: user.id,
-      userName: user.name,
-      content: content,
-      timestamp: new Date().toISOString(),
-      resolved: false,
-      position,
-    };
-
-    setComments((prev) => [...prev, comment]);
+    if (!content.trim() || !user) {
+      console.error("Cannot add comment: content is empty or user is null");
+      return;
+    }
+    try {
+      await createComment({
+        item: {
+          documentId: activeDocumentId!,
+          userId: user.id,
+          content,
+          position,
+          updatedAt: Date.now(),
+          resolved: false,
+        }
+      });
+    } catch (error) {
+      console.error("Error creating comment:", error);
+    }
   };
 
-  const handleResolveComment = (commentId: string) => {
-    setComments((prev) =>
-      prev.map((comment) =>
-        comment.id === commentId ? { ...comment, resolved: true } : comment
-      )
-    );
+  const handleResolveComment = async (commentId: string) => {
+    try {
+      await updateComment({
+        id: commentId as Id<"comments">,
+        updates: { resolved: true, updatedAt: Date.now() }
+      });
+    } catch (error) {
+      console.error("Error resolving comment:", error);
+    }
   };
 
-  const handleReplyToComment = (commentId: string, content: string) => {
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      await deleteComment({
+        id: commentId as Id<"comments">,
+      });
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    }
+  };
+
+  const handleReplyToComment = async (commentId: string, content: string) => {
     if (!content.trim() || !user) return;
 
-    const reply = {
-      id: Date.now().toString(),
-      userId: user.id,
-      userName: user.name,
-      content: content,
-      timestamp: new Date().toISOString(),
-      resolved: false,
-    };
-
-    setComments((prev) =>
-      prev.map((comment) =>
-        comment.id === commentId
-          ? { ...comment, replies: [...(comment.replies || []), reply] }
-          : comment
-      )
-    );
+    try {
+      await createComment({
+        item: {
+          documentId: activeDocumentId!,
+          userId: user.id,
+          content,
+          resolved: false,
+          parentId: commentId as Id<"comments">,
+        }
+      });
+    } catch (error) {
+      console.error("Error creating reply:", error);
+    }
   };
 
   const handleExport = () => {
@@ -243,21 +268,21 @@ export default function ResearchDashboard() {
           <div className="max-w-6xl mx-auto relative">
             {activeView === "editor" ? (
               activeDocument ? (
-                <>
-                  <CommentSystem
-                    comments={comments}
-                    collaborators={collaborators!}
-                    user={user}
-                    onAddComment={handleAddComment}
-                    onResolveComment={handleResolveComment}
-                    onReplyToComment={handleReplyToComment}
-                  />
+                <div className="relative"> {/* Add this wrapper */}
                   <RichTextEditor
                     value={activeDocument.content || ""}
                     onChange={handleContentUpdate}
                     placeholder="Begin your research document..."
                   />
-                </>
+                  <CommentSystem
+                    comments={comments}
+                    user={user}
+                    onAddComment={handleAddComment}
+                    onResolveComment={handleResolveComment}
+                    onReply={handleReplyToComment}
+                    deleteComment={handleDeleteComment}
+                  />
+                </div>
               ) : (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                   <FileText size={48} className="mx-auto mb-4 opacity-50" />

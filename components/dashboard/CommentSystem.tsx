@@ -1,327 +1,315 @@
 "use client";
 
-import React, { useState } from "react";
-import { MessageSquare, Send, AtSign, X, Check, HelpCircle } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { MessageSquare, Send, X, Check, Trash2, Reply } from "lucide-react";
 
 interface Comment {
-  id: string;
+  _id: string;
+  documentId: string;
   userId: string;
-  userName: string;
+  parentId?: string;
   content: string;
-  timestamp: string;
-  position?: { x: number; y: number };
   resolved: boolean;
-  replies?: Comment[];
+  assignedTo?: string;
+  updatedAt?: number;
+  deletedAt?: number;
+  position?: { y: number };
+  _creationTime: number;
+  userName?: string;
 }
 
 interface CommentSystemProps {
-  comments: Comment[];
-  collaborators: any[];
+  comments: any[];
   user: any;
-  onAddComment: (content: string, position?: { x: number; y: number }) => void;
+  onAddComment: (content: string, position: { y: number }) => void;
   onResolveComment: (commentId: string) => void;
-  onReplyToComment: (commentId: string, content: string) => void;
+  onReply: (commentId: string, content: string) => void;
+  deleteComment: (commentId: string) => void;
 }
 
 export default function CommentSystem({
   comments,
-  collaborators,
   user,
   onAddComment,
   onResolveComment,
-  onReplyToComment,
+  onReply,
+  deleteComment
 }: CommentSystemProps) {
-  const [showCommentForm, setShowCommentForm] = useState(false);
   const [newComment, setNewComment] = useState("");
-  const [commentPosition, setCommentPosition] = useState<{ x: number; y: number } | null>(null);
-  const [showMentions, setShowMentions] = useState(false);
+  const [commentY, setCommentY] = useState<number | null>(null);
   const [activeComment, setActiveComment] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
-  const [showHelp, setShowHelp] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
-  const handleDocumentClick = (e: React.MouseEvent) => {
-    if (e.ctrlKey || e.metaKey) {
-      // Ctrl/Cmd + Click to add comment
-      const rect = e.currentTarget.getBoundingClientRect();
-      const position = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      };
-      setCommentPosition(position);
-      setShowCommentForm(true);
-    }
+  // Filter out deleted comments and organize comments with replies
+  const activeComments = comments.filter(comment => !comment.deletedAt);
+  const mainComments = activeComments.filter(comment => !comment.parentId);
+  const replies = activeComments.filter(comment => comment.parentId);
+
+  const getRepliesForComment = (commentId: string) => {
+    return replies.filter(reply => reply.parentId === commentId);
   };
 
-  const handleSubmitComment = () => {
-    if (!newComment.trim()) return;
-    
-    onAddComment(newComment, commentPosition || undefined);
+  const handleRailClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY - rect.top; // position inside editor
+    setCommentY(y);
     setNewComment("");
-    setShowCommentForm(false);
-    setCommentPosition(null);
   };
 
-  const handleInputChange = (value: string) => {
-    setNewComment(value);
-    
-    // Show mentions dropdown when @ is typed
-    if (value.includes("@") && value.endsWith("@")) {
-      setShowMentions(true);
-    } else {
-      setShowMentions(false);
+  const handleSubmit = () => {
+    if (!newComment.trim() || commentY === null) return;
+
+    onAddComment(newComment, { y: commentY });
+    setNewComment("");
+    setCommentY(null);
+  };
+
+  const handleReplySubmit = (commentId: string) => {
+    if (!replyContent.trim()) return;
+
+    onReply(commentId, replyContent);
+    setReplyContent("");
+    setReplyingTo(null);
+  };
+
+  const handleDelete = (commentId: string) => {
+    deleteComment(commentId);
+    if (activeComment === commentId) {
+      setActiveComment(null);
     }
   };
 
-  const insertMention = (userName: string) => {
-    const lastAtIndex = newComment.lastIndexOf("@");
-    const beforeAt = newComment.substring(0, lastAtIndex);
-    const afterAt = newComment.substring(lastAtIndex + 1);
-    
-    setNewComment(`${beforeAt}@${userName} ${afterAt}`);
-    setShowMentions(false);
-  };
-
-  const handleReply = (commentId: string) => {
-    if (!replyContent.trim()) return;
-    
-    onReplyToComment(commentId, replyContent);
-    setReplyContent("");
-    setActiveComment(null);
-  };
-
-  const renderCommentContent = (content: string) => {
-    return content.split(/(@\w+)/g).map((part, index) => 
-      part.startsWith("@") ? (
-        <span key={index} className="text-primary font-medium bg-primary/10 px-1 rounded">
-          {part}
-        </span>
-      ) : (
-        part
-      )
-    );
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      if (replyingTo) {
+        handleReplySubmit(replyingTo);
+      } else {
+        handleSubmit();
+      }
+    }
   };
 
   return (
-    <div className="relative">
-      {/* Document overlay for comment positioning */}
-      <div 
-        className="absolute inset-0 pointer-events-none z-10"
-        onClick={handleDocumentClick}
-        style={{ pointerEvents: showCommentForm ? 'none' : 'auto' }}
+    <>
+      {/* Vertical comment rail - positioned absolutely over the editor */}
+      <div
+        className="absolute top-0 right-0 w-0 h-full cursor-pointer group z-10"
+        onClick={handleRailClick}
       >
-        {/* Comment indicators */}
-        {comments.map((comment) => (
-          comment.position && (
-            <div
-              key={comment.id}
-              className="absolute w-4 h-4 bg-primary rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-110 transition-transform"
-              style={{
-                left: comment.position.x - 8,
-                top: comment.position.y - 8,
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setActiveComment(activeComment === comment.id ? null : comment.id);
-              }}
-            >
-              <div className="w-2 h-2 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-            </div>
-          )
+        {/* Rail line - make it more visible */}
+        <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gray-400 group-hover:bg-blue-500 transition-colors transform -translate-x-1/2"></div>
+
+        {/* Hover indicator */}
+        <div className="absolute inset-0 bg-transparent group-hover:bg-blue-50/30 transition-colors"></div>
+
+        {/* markers for main comments only (not replies) */}
+        {mainComments.map((comment) => (
+          <div
+            key={comment._id}
+            className="absolute left-2 translate-x-1 cursor-pointer group/comment"
+            style={{ top: comment.position?.y || 0 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveComment(comment._id);
+            }}
+          >
+            <MessageSquare
+              size={20}
+              strokeWidth={2}
+              fill={comment.resolved ? "#ebebebff" : "#81a8fcff"}
+              className={
+                comment.resolved
+                  ? "text-gray-400 group-hover/comment:text-gray-600"
+                  : "text-primary group-hover/comment:text-primary/80"
+              }
+            />
+          </div>
         ))}
       </div>
 
-      {/* Comment Form */}
-      {showCommentForm && commentPosition && (
+      {/* Comment form at clicked Y */}
+      {commentY !== null && (
         <div
-          className="absolute z-20 bg-card border border-border rounded-lg p-4 shadow-lg w-80"
-          style={{
-            left: Math.min(commentPosition.x, window.innerWidth - 320),
-            top: commentPosition.y + 20,
-          }}
+          className="absolute right-8 w-64 bg-white border border-gray-200 rounded-lg p-4 shadow-lg z-20"
+          style={{ top: Math.max(commentY - 100, 10) }}
         >
-          <div className="flex items-center gap-2 mb-3">
-            <MessageSquare size={16} className="text-primary" />
-            <span className="font-medium text-sm">Add Comment</span>
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-medium text-sm text-gray-900">Add Comment</span>
             <button
-              onClick={() => {
-                setShowCommentForm(false);
-                setCommentPosition(null);
-                setNewComment("");
-              }}
-              className="ml-auto p-1 hover:bg-accent rounded"
+              onClick={() => setCommentY(null)}
+              className="p-1 hover:bg-gray-100 rounded"
             >
               <X size={14} />
             </button>
           </div>
-
-          <div className="relative">
-            <textarea
-              value={newComment}
-              onChange={(e) => handleInputChange(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-              placeholder="Type your comment... Use @ to mention"
-              rows={3}
-              autoFocus
-            />
-            
-            {/* Mentions dropdown */}
-            {showMentions && (
-              <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-md shadow-lg z-10">
-                <div className="p-2">
-                  <p className="text-xs text-muted-foreground mb-2">Mention someone:</p>
-                  {collaborators.map((collab) => (
-                    <button
-                      key={collab.id}
-                      onClick={() => insertMention(collab.name)}
-                      className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded-sm transition-colors"
-                    >
-                      @{collab.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 mt-3">
+          <textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            onKeyDown={handleKeyPress}
+            className="w-full text-sm border border-gray-300 rounded p-2 resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            placeholder="Type your comment..."
+            rows={4}
+            autoFocus
+          />
+          <div className="flex justify-between items-center mt-3">
+            <span className="text-xs text-gray-500">
+              Ctrl+Enter to save
+            </span>
             <button
-              onClick={handleSubmitComment}
-              className="flex items-center gap-1 px-3 py-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm"
+              onClick={handleSubmit}
+              disabled={!newComment.trim()}
+              className="flex items-center gap-1 px-3 py-1 bg-primary text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90"
             >
-              <Send size={12} />
+              <Send size={14} />
               Comment
             </button>
-            <button
-              onClick={() => {
-                setShowCommentForm(false);
-                setCommentPosition(null);
-                setNewComment("");
-              }}
-              className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Cancel
-            </button>
           </div>
         </div>
       )}
 
-      {/* Active Comment Display */}
+      {/* Active comment popup */}
       {activeComment && (
-        <div className="fixed right-4 top-20 w-80 bg-card border border-border rounded-lg shadow-lg z-30 max-h-96 overflow-y-auto">
-          {comments
-            .filter((comment) => comment.id === activeComment)
-            .map((comment) => (
-              <div key={comment.id} className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-secondary rounded-full flex items-center justify-center text-xs font-medium">
-                      {comment.userName.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{comment.userName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(comment.timestamp).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {!comment.resolved && (
-                      <button
-                        onClick={() => onResolveComment(comment.id)}
-                        className="p-1 hover:bg-accent rounded text-green-600"
-                        title="Resolve comment"
-                      >
-                        <Check size={14} />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setActiveComment(null)}
-                      className="p-1 hover:bg-accent rounded"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="text-sm mb-3">
-                  {renderCommentContent(comment.content)}
-                </div>
-
-                {comment.resolved && (
-                  <div className="text-xs text-green-600 mb-2 flex items-center gap-1">
-                    <Check size={12} />
-                    Resolved
-                  </div>
-                )}
-
-                {/* Replies */}
-                {comment.replies && comment.replies.length > 0 && (
-                  <div className="border-l-2 border-border pl-3 ml-3 space-y-2">
-                    {comment.replies.map((reply) => (
-                      <div key={reply.id} className="text-sm">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium">{reply.userName}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(reply.timestamp).toLocaleString()}
-                          </span>
-                        </div>
-                        <div>{renderCommentContent(reply.content)}</div>
+        <div
+          className="absolute right-8 w-80 bg-white border border-gray-200 rounded-lg p-4 shadow-lg z-30 max-h-96 overflow-y-auto"
+          style={{
+            top: Math.max(mainComments.find(c => c._id === activeComment)?.position?.y - 100 || 0, 10)
+          }}
+        >
+          {mainComments
+            .filter((c) => c._id === activeComment)
+            .map((comment) => {
+              const commentReplies = getRepliesForComment(comment._id);
+              return (
+                <div key={comment._id}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-medium">
+                        {comment.userName?.charAt(0) || 'U'}
                       </div>
-                    ))}
+                      <p className="font-medium text-sm">{comment.userName || "Unknown User"}</p>
+                    </div>
+                    <div className="flex gap-1">
+                      {!comment.resolved && (
+                        <button
+                          onClick={() => {
+                            onResolveComment(comment._id);
+                            setActiveComment(null);
+                          }}
+                          className="p-1 hover:bg-gray-100 rounded text-green-600"
+                          title="Resolve comment"
+                        >
+                          <Check size={14} />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setReplyingTo(comment._id)}
+                        className="p-1 hover:bg-gray-100 rounded text-blue-600"
+                        title="Reply to comment"
+                      >
+                        <Reply size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(comment._id)}
+                        className="p-1 hover:bg-gray-100 rounded text-red-600"
+                        title="Delete comment"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                      <button
+                        onClick={() => setActiveComment(null)}
+                        className="p-1 hover:bg-gray-100 rounded"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
                   </div>
-                )}
+                  <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{comment.content}</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {new Date(comment._creationTime).toLocaleString()}
+                  </p>
 
-                {/* Reply Form */}
-                <div className="mt-3 pt-3 border-t border-border">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={replyContent}
-                      onChange={(e) => setReplyContent(e.target.value)}
-                      className="flex-1 px-2 py-1 text-sm border border-border rounded-md bg-background focus:ring-1 focus:ring-primary focus:border-transparent"
-                      placeholder="Reply..."
-                    />
-                    <button
-                      onClick={() => handleReply(comment.id)}
-                      className="px-2 py-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                    >
-                      <Send size={12} />
-                    </button>
-                  </div>
+                  {/* Replies section */}
+                  {commentReplies.length > 0 && (
+                    <div className="mt-4 border-t pt-3">
+                      <p className="text-xs font-medium text-gray-500 mb-2">Replies:</p>
+                      <div className="space-y-3">
+                        {commentReplies.map((reply) => (
+                          <div key={reply._id} className="pl-3 border-l-2 border-gray-200">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 bg-gray-400 text-white rounded-full flex items-center justify-center text-xs">
+                                  {reply.userName?.charAt(0) || 'U'}
+                                </div>
+                                <p className="text-xs font-medium">{reply.userName || "Unknown User"}</p>
+                              </div>
+                              <button
+                                onClick={() => handleDelete(reply._id)}
+                                className="p-1 hover:bg-gray-100 rounded text-red-600"
+                                title="Delete reply"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-600 mt-1">{reply.content}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {new Date(reply._creationTime).toLocaleString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Reply form */}
+                  {replyingTo === comment._id && (
+                    <div className="mt-4 pt-3 border-t">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">Reply</span>
+                        <button
+                          onClick={() => setReplyingTo(null)}
+                          className="p-1 hover:bg-gray-100 rounded"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                      <textarea
+                        value={replyContent}
+                        onChange={(e) => setReplyContent(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                        className="w-full text-sm border border-gray-300 rounded p-2 resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        placeholder="Type your reply..."
+                        rows={3}
+                        autoFocus
+                      />
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-500">
+                          Ctrl+Enter to send
+                        </span>
+                        <button
+                          onClick={() => handleReplySubmit(comment._id)}
+                          disabled={!replyContent.trim()}
+                          className="flex items-center gap-1 px-3 py-1 bg-primary text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90"
+                        >
+                          <Send size={12} />
+                          Reply
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
       )}
 
-      {/* Collapsible Help */}
-      <div className="fixed bottom-4 right-4 z-20">
-        {showHelp ? (
-          <div className="bg-card border border-border rounded-lg p-3 text-sm text-muted-foreground max-w-xs shadow-lg">
-            <div className="flex items-center justify-between mb-2">
-              <p className="font-medium">💡 Comment Tips:</p>
-              <button
-                onClick={() => setShowHelp(false)}
-                className="p-1 hover:bg-accent rounded transition-colors"
-                title="Close help"
-              >
-                <X size={14} />
-              </button>
-            </div>
-            <p>• Ctrl/Cmd + Click to add comments</p>
-            <p>• Click comment dots to view/reply</p>
-            <p>• Use @ to mention collaborators</p>
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowHelp(true)}
-            className="bg-card border border-border rounded-lg p-2 hover:bg-accent transition-colors shadow-lg"
-            title="Show help"
-          >
-            <HelpCircle size={26} className="text-muted-foreground" />
-          </button>
-        )}
+      {/* Instructions */}
+      <div className="fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-600 max-w-md w-90 shadow-sm">
+        <p className="font-medium mb-1 text-gray-800">💡 Comment Tips:</p>
+        <p>• Click right-edge rail on the document to comment</p>
+        <p>• Click comment icons to view, reply, or resolve</p>
+        <p>• Use @ to mention collaborators</p>
       </div>
-    </div>
+    </>
   );
 }
