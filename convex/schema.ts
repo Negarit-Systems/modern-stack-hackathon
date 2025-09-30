@@ -27,13 +27,13 @@ export default defineSchema({
   comments: defineTable(schemas.commentSchema).index("by_documentId", [
     "documentId",
   ]),
-  invites: defineTable(schemas.inviteSchema).index("by_sessionId", [
-    "sessionId",
-  ]),
-  scrapedData: defineTable(schemas.scrapedDataSchema).index("by_session_and_insight", [
-    "sessionId",
-    "insightId"
-  ]),
+  invites: defineTable(schemas.inviteSchema)
+    .index("by_sessionId", ["sessionId"])
+    .index("unique_session_email", ["sessionId", "email"]),
+  scrapedData: defineTable(schemas.scrapedDataSchema).index(
+    "by_session_and_insight",
+    ["sessionId", "insightId"]
+  ),
   insights: defineTable(schemas.insightsSchema).index("by_sessionId", [
     "sessionId",
   ]),
