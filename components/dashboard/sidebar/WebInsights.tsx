@@ -67,7 +67,6 @@ export default function WebInsights({ sessionId }: UploadProps) {
     return scrapedDataByInsight.reduce(
       (acc, data) => {
         const insightId = data.insightId;
-        console.log("data.insightId", data.insightId);
         if (insightId) {
           if (!acc[insightId]) {
             acc[insightId] = [];

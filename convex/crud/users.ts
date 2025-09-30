@@ -88,3 +88,39 @@ export const searchCollaborators = query({
     return { collaborators };
   },
 });
+
+
+export const getCollaboratorUsers = query({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, { sessionId, }) => {
+    const session = await ctx.db.get(sessionId);
+    if (!session) {
+      throw new Error("Session not found");
+    }
+
+    const collaboratorIds = session?.collaboratorIds || [];
+    if (collaboratorIds.length === 0) {
+      return { collaborators: [] };
+    }
+
+    const collaborators = await ctx.runQuery(
+      components.betterAuth.adapter.findMany,
+      {
+        model: "user",
+        where: [
+          {
+            field: "id",
+            operator: "in",
+            value: collaboratorIds,
+          },
+        ],
+        paginationOpts: {
+          cursor: "",
+          numItems: 10,
+        },
+      }
+    );
+
+    return { collaborators };
+  },
+});

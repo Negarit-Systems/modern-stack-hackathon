@@ -9,6 +9,19 @@ interface DashboardHeaderProps {
   onExport: () => void;
 }
 
+const colors = [
+  "bg-blue-500",
+  "bg-green-500",
+  "bg-red-500",
+  "bg-yellow-500",
+  "bg-purple-500",
+  "bg-pink-500",
+  "bg-orange-500",
+  "bg-teal-500",
+  "bg-indigo-500",
+  "bg-cyan-500",
+];
+
 export default function DashboardHeader({ session, collaborators, onInvite, onExport }: DashboardHeaderProps) {
   return (
     <div className="border-b border-border bg-card px-6 py-4">
@@ -18,20 +31,34 @@ export default function DashboardHeader({ session, collaborators, onInvite, onEx
           <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
             <span>Research Session • {session?._creationTime ? new Date(session._creationTime).toLocaleDateString() : 'Unknown date'}</span>
             <span>Auto-saved • Last sync: {new Date().toLocaleTimeString()}</span>
-            <div className="flex items-center gap-2">
-              {collaborators
-                .filter((c) => c.status === "active")
-                .map((collab) => (
-                  <div key={collab.id} className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>{collab.name.split(" ")[0]}</span>
-                  </div>
-                ))}
-            </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+            {collaborators.map((collab) => {
+              const firstChar = collab.name?.[0]?.toUpperCase() || "A";
+              const colorIndex = (firstChar.charCodeAt(0) - 65) % colors.length;
+              const circleColor = colors[colorIndex];
+
+              return (
+              <div
+                key={collab._id}
+                className="relative flex items-center gap-1 group"
+              >
+                <div
+                className={`w-7 h-7 flex items-center justify-center rounded-full text-white font-bold text-sm ${circleColor} cursor-pointer`}
+                >
+                {firstChar}
+                </div>
+                <div className="absolute left-0 top-8 z-10 hidden group-hover:flex flex-col bg-card border border-border rounded-md px-3 py-2 shadow-lg min-w-max">
+                <span className="font-semibold">{collab.name}</span>
+                <span className="text-muted-foreground text-xs">{collab.email}</span>
+                </div>
+              </div>
+              );
+            })}
+            </div>
           <button
             onClick={onInvite}
             className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors text-sm"

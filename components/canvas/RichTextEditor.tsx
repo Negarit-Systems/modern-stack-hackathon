@@ -10,11 +10,11 @@ import {
   ListOrdered,
   Quote,
   ImageIcon,
-  BarChart3,
   Link,
   AlignLeft,
   AlignCenter,
   AlignRight,
+  Maximize2,
 } from "lucide-react";
 
 interface RichTextEditorProps {
@@ -22,15 +22,22 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   placeholder?: string;
 }
+
+interface ResizableImage extends HTMLImageElement {
+  resizable?: boolean;
+}
+
 export default function RichTextEditor({
   value,
   onChange,
   placeholder,
 }: RichTextEditorProps) {
-  const [showGraphModal, setShowGraphModal] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
+  const [showResizeControls, setShowResizeControls] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resizeControlsRef = useRef<HTMLDivElement>(null);
   const isUpdatingRef = useRef(false);
   const lastValueRef = useRef<string>(value);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -42,15 +49,15 @@ export default function RichTextEditor({
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0 && editorRef.current) {
       const range = selection.getRangeAt(0);
-      
+
       // Use a more precise method to calculate text offset
       const preCaretRange = range.cloneRange();
       preCaretRange.selectNodeContents(editorRef.current);
       preCaretRange.setEnd(range.endContainer, range.endOffset);
-      
+
       // Get the text content up to cursor position
       const textBeforeCursor = preCaretRange.toString();
-      
+
       return {
         offset: textBeforeCursor.length,
         nodeIndex: 0,
@@ -64,55 +71,55 @@ export default function RichTextEditor({
 
   const restoreCursorPosition = useCallback((position: { offset: number; nodeIndex: number; containerNodeName?: string; containerOffset?: number } | null) => {
     if (!position || !editorRef.current) return;
-    
+
     try {
       const selection = window.getSelection();
       if (!selection) return;
-      
+
       // More precise restoration using text content matching
       const targetOffset = position.offset;
       let currentOffset = 0;
-      
+
       // Create a range to traverse the content
       const range = document.createRange();
       range.selectNodeContents(editorRef.current);
-      
+
       // Walk through all text nodes to find the exact position
       const walker = document.createTreeWalker(
         editorRef.current,
         NodeFilter.SHOW_TEXT,
         null
       );
-      
+
       let textNode;
       while (textNode = walker.nextNode()) {
         const nodeLength = textNode.textContent?.length || 0;
-        
+
         if (currentOffset + nodeLength >= targetOffset) {
           // Found the target text node
           const offsetInNode = targetOffset - currentOffset;
           const newRange = document.createRange();
-          
+
           // Ensure offset doesn't exceed node length
           const safeOffset = Math.min(offsetInNode, nodeLength);
           newRange.setStart(textNode, safeOffset);
           newRange.collapse(true);
-          
+
           selection.removeAllRanges();
           selection.addRange(newRange);
           return;
         }
-        
+
         currentOffset += nodeLength;
       }
-      
+
       // If we couldn't find the exact position, place cursor at the end
       const fallbackRange = document.createRange();
       fallbackRange.selectNodeContents(editorRef.current);
       fallbackRange.collapse(false);
       selection.removeAllRanges();
       selection.addRange(fallbackRange);
-      
+
     } catch (error) {
       // Final fallback: place cursor at end
       const selection = window.getSelection();
@@ -131,7 +138,7 @@ export default function RichTextEditor({
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
-    
+
     debounceTimeoutRef.current = setTimeout(() => {
       onChange(newValue);
       isTypingRef.current = false;
@@ -146,7 +153,12 @@ export default function RichTextEditor({
         const cursorPosition = saveCursorPosition();
         editorRef.current.innerHTML = value;
         lastValueRef.current = value;
-        
+
+        // Re-initialize resizable images after content update
+        setTimeout(() => {
+          initializeResizableImages();
+        }, 100);
+
         // Only restore cursor if the user was actively editing
         if (cursorPosition && document.activeElement === editorRef.current) {
           // Small delay to ensure DOM is updated
@@ -167,6 +179,62 @@ export default function RichTextEditor({
     };
   }, []);
 
+  // Initialize resizable images
+  const initializeResizableImages = useCallback(() => {
+    if (!editorRef.current) return;
+
+    const images = editorRef.current.querySelectorAll('img');
+    images.forEach((img) => {
+      const resizableImg = img as ResizableImage;
+
+      if (!resizableImg.resizable) {
+        resizableImg.resizable = true;
+
+        // Add resizable styling
+        resizableImg.style.cursor = 'move';
+        resizableImg.style.border = '2px dashed transparent';
+        resizableImg.style.transition = 'border-color 0.2s ease';
+
+        // Add click handler for selection
+        resizableImg.addEventListener('click', handleImageClick);
+      }
+    });
+  }, []);
+
+  // Handle image click for selection
+  const handleImageClick = useCallback((e: MouseEvent) => {
+    e.stopPropagation();
+    const img = e.target as HTMLImageElement;
+    setSelectedImage(img);
+    setShowResizeControls(true);
+
+    // Add selection styling
+    img.style.border = '2px dashed #3b82f6';
+    img.style.borderRadius = '8px';
+  }, []);
+
+  // Handle click outside to deselect image
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (resizeControlsRef.current && !resizeControlsRef.current.contains(e.target as Node) &&
+          e.target !== selectedImage) {
+        if (selectedImage) {
+          selectedImage.style.border = '2px dashed transparent';
+        }
+        setSelectedImage(null);
+        setShowResizeControls(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [selectedImage]);
+
+  // Initialize images when component mounts
+  useEffect(() => {
+    initializeResizableImages();
+  }, [initializeResizableImages]);
+
   const formatText = (command: string, val?: string) => {
     isUpdatingRef.current = true;
     document.execCommand(command, false, val);
@@ -174,6 +242,11 @@ export default function RichTextEditor({
       const newValue = editorRef.current.innerHTML;
       lastValueRef.current = newValue;
       onChange(newValue);
+
+      // Re-initialize images after formatting
+      setTimeout(() => {
+        initializeResizableImages();
+      }, 100);
     }
     isUpdatingRef.current = false;
   };
@@ -184,59 +257,119 @@ export default function RichTextEditor({
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
-      
+
       img.onload = () => {
         // Calculate new dimensions
         const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
         canvas.width = img.width * ratio;
         canvas.height = img.height * ratio;
-        
+
         // Draw and compress
         ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
         resolve(canvas.toDataURL('image/jpeg', quality));
       };
-      
+
       img.src = URL.createObjectURL(file);
     });
   };
+
+  // Resize image function
+  const resizeImage = (width: number, height?: number) => {
+    console.log("Resizing image to:", width, height);
+    if (!selectedImage) return;
+
+    isUpdatingRef.current = true;
+
+    // Set new dimensions
+    selectedImage.style.width = `${width}px`;
+    if (height) {
+      selectedImage.style.height = `${height}px`;
+    } else {
+      selectedImage.style.height = 'auto';
+    }
+
+    // Maintain aspect ratio by default
+    selectedImage.style.maxWidth = '100%';
+    selectedImage.style.objectFit = 'contain';
+
+    // Update content
+    if (editorRef.current) {
+      const newValue = editorRef.current.innerHTML;
+      lastValueRef.current = newValue;
+      onChange(newValue);
+    }
+
+    isUpdatingRef.current = false;
+  };
+
+  // Reset image to original size
+  const resetImageSize = () => {
+    if (!selectedImage) return;
+
+    isUpdatingRef.current = true;
+
+    selectedImage.style.width = '';
+    selectedImage.style.height = '';
+    selectedImage.style.maxWidth = '100%';
+
+    if (editorRef.current) {
+      const newValue = editorRef.current.innerHTML;
+      lastValueRef.current = newValue;
+      onChange(newValue);
+    }
+
+    isUpdatingRef.current = false;
+  };
+
+  // Preset sizes for quick resizing
+  const presetSizes = [
+    { label: 'Small', width: 200 },
+    { label: 'Medium', width: 400 },
+    { label: 'Large', width: 600 },
+    { label: 'Original', action: resetImageSize },
+  ];
 
   const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !editorRef.current) return;
 
     setIsUploadingImage(true);
-    
+
     try {
       // Save cursor position before insertion
       const cursorPosition = saveCursorPosition();
-      
+
       // Compress image to reduce lag
       const compressedDataUrl = await compressImage(file, 800, 0.7);
-      
-      // Create image element
-      const img = document.createElement('img');
+
+      // Create image element with resizable properties
+      const img = document.createElement('img') as ResizableImage;
       img.src = compressedDataUrl;
       img.alt = 'Uploaded image';
-      img.style.cssText = 'max-width: 100%; height: auto; margin: 10px 0; border-radius: 8px; display: block;';
-      
+      img.style.cssText = 'max-width: 100%; height: auto; margin: 10px 0; border-radius: 8px; display: block; cursor: move; border: 2px dashed transparent; transition: border-color 0.2s ease;';
+      img.resizable = true;
+
+      // Add click handler
+      img.addEventListener('click', handleImageClick);
+
       // Insert image at cursor position
       isUpdatingRef.current = true;
-      
+
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
         range.deleteContents();
-        
+
         // Insert image and add a line break after it
         range.insertNode(img);
         range.collapse(false);
-        
+
         // Add a paragraph after the image for continued typing
         const br = document.createElement('br');
         range.insertNode(br);
         range.setStartAfter(br);
         range.collapse(true);
-        
+
         selection.removeAllRanges();
         selection.addRange(range);
       } else {
@@ -244,41 +377,46 @@ export default function RichTextEditor({
         editorRef.current.appendChild(img);
         editorRef.current.appendChild(document.createElement('br'));
       }
-      
+
       // Update content with debouncing
       const newValue = editorRef.current.innerHTML;
       lastValueRef.current = newValue;
       isTypingRef.current = true;
       debouncedOnChange(newValue);
-      
+
       isUpdatingRef.current = false;
-      
+
     } catch (error) {
       console.error('Error uploading image:', error);
       isUpdatingRef.current = false;
     } finally {
       setIsUploadingImage(false);
     }
-    
+
     // Clear the input
     e.target.value = '';
-  }, [saveCursorPosition, debouncedOnChange]);
+  }, [saveCursorPosition, debouncedOnChange, handleImageClick]);
 
   const handleContentChange = useCallback(() => {
     if (editorRef.current && !isUpdatingRef.current) {
       const newValue = editorRef.current.innerHTML;
-      
+
       // Only update if content actually changed
       if (newValue !== lastValueRef.current) {
         lastValueRef.current = newValue;
         isTypingRef.current = true;
         lastCursorPositionRef.current = saveCursorPosition();
-        
+
         // Use debounced update for better performance
         debouncedOnChange(newValue);
+
+        // Re-initialize images after content change
+        setTimeout(() => {
+          initializeResizableImages();
+        }, 100);
       }
     }
-  }, [debouncedOnChange, saveCursorPosition]);
+  }, [debouncedOnChange, saveCursorPosition, initializeResizableImages]);
 
   // Handle input events with better cursor management
   const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
@@ -394,13 +532,6 @@ export default function RichTextEditor({
               )}
             </button>
             <button
-              onClick={() => setShowGraphModal(true)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md"
-              title="Insert Graph"
-            >
-              <BarChart3 size={16} />
-            </button>
-            <button
               onClick={() => {
                 const url = prompt("Enter URL:");
                 if (url) formatText("createLink", url);
@@ -413,6 +544,48 @@ export default function RichTextEditor({
           </div>
         </div>
       </div>
+
+      {/* Resize Controls */}
+      {showResizeControls && selectedImage && (
+        <div
+          ref={resizeControlsRef}
+          className="border-b border-border p-3 bg-blue-50/50"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-blue-800 flex items-center gap-1">
+              <Maximize2 size={16} />
+              Resize Image
+            </span>
+
+            {/* Preset Sizes */}
+            <div className="flex items-center gap-2">
+              {presetSizes.map((preset) => (
+                <button
+                  key={preset.label}
+                  onClick={() => preset.action ? preset.action() : resizeImage(preset.width!)}
+                  className="px-2 py-1 text-xs border border-blue-300 rounded hover:bg-blue-100 text-blue-700"
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                if (selectedImage) {
+                  selectedImage.style.border = '2px dashed transparent';
+                }
+                setSelectedImage(null);
+                setShowResizeControls(false);
+              }}
+              className="ml-auto px-2 py-1 text-xs border border-red-300 rounded hover:bg-red-50 text-red-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Editor */}
       <div
