@@ -4,14 +4,12 @@ import React, { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import AIAssistant from "./sidebar/AIAssistant";
 import TeamChat from "./sidebar/TeamChat";
-import CollaboratorsList from "./sidebar/CollaboratorsList";
 import RecentInsights from "./sidebar/RecentInsights";
 import { Id } from "@/convex/_generated/dataModel";
 
 interface SidebarProps {
   session: any;
   messages: any[];
-  collaborators: any[];
   user: any;
   onSendMessage: (message: string) => void;
   onChatbotQuery: (sessionId: Id<"sessions">, prompt: string) => void;
@@ -21,7 +19,6 @@ interface SidebarProps {
 export default function Sidebar({
   session,
   messages,
-  collaborators,
   user,
   onSendMessage,
   onChatbotQuery,
@@ -64,7 +61,6 @@ export default function Sidebar({
             loading={loading}
           />
           <TeamChat user={user} />
-          <CollaboratorsList collaborators={collaborators} />
           <RecentInsights sessionId={session._id} />
         </div>
       )}

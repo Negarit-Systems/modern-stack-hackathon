@@ -48,7 +48,7 @@ export default function ResearchDashboard() {
   const updateComment = useMutation(api.crud.comment.update);
   const deleteComment = useMutation(api.crud.comment.deleteOne);
 
-    // collaborators
+  // collaborators
   const collaboratorResults = useQuery(api.crud.users.getCollaboratorUsers, {
     sessionId,
   });
@@ -101,11 +101,7 @@ export default function ResearchDashboard() {
     }
   };
 
-  // to be replaced with real data fetching
-  const [summaries, setSummaries] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
-
-  const [collaborators, setCollaborators] = useState([]);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -219,7 +215,6 @@ export default function ResearchDashboard() {
       <Sidebar
         session={session}
         messages={messages}
-        collaborators={collaborators!}
         user={user}
         onSendMessage={handleSendMessage}
         onChatbotQuery={handleChatbotQuery}
@@ -230,7 +225,7 @@ export default function ResearchDashboard() {
       <div className="flex-1 flex flex-col">
         <DashboardHeader
           session={session}
-          collaborators={collaborators!}
+          collaborators={collaboratorUsers}
           onInvite={() => setShowInviteModal(true)}
           onExport={handleExport}
         />
