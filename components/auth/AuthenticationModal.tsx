@@ -45,9 +45,9 @@ export default function AuthenticationModal({
   const handleAuthSubmit = async () => {
     const user = await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/dashboard",
+      callbackURL: "/",
       errorCallbackURL: "/error",
-      newUserCallbackURL: "/dashboard",
+      newUserCallbackURL: "/",
       disableRedirect: false,
     });
 
@@ -152,7 +152,9 @@ export default function AuthenticationModal({
           )}
 
           <div>
-            <label className="block text-sm font-medium mb-2 dark:text-slate-200">Email</label>
+            <label className="block text-sm font-medium mb-2 dark:text-slate-200">
+              Email
+            </label>
             <div className="relative">
               <Mail
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground dark:text-slate-500"
@@ -172,7 +174,9 @@ export default function AuthenticationModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 dark:text-slate-200">Password</label>
+            <label className="block text-sm font-medium mb-2 dark:text-slate-200">
+              Password
+            </label>
             <div className="relative">
               <Lock
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground dark:text-slate-500"

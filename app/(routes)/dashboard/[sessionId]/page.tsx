@@ -23,16 +23,20 @@ export default function ResearchDashboard() {
   const router = useRouter();
 
   const authenticatedUser = authClient.useSession();
-  // The better-auth hook exposes `data` which is `undefined` while loading,
-  // becomes `null` for unauthenticated, or an object for authenticated.
+
   const authData = (authenticatedUser as any)?.data;
-  const authPending = (authenticatedUser as any)?.isPending || (authenticatedUser as any)?.isLoading || false;
+  const authPending =
+    (authenticatedUser as any)?.isPending ||
+    (authenticatedUser as any)?.isLoading ||
+    false;
   const isAuthLoading = authData === undefined || authPending;
   const user = authData?.user || null;
   const sessionId = (params?.sessionId ?? "") as Id<"sessions">;
   const [activeView, setActiveView] = useState<ActiveView>("editor");
-  const [activeDocumentId, setActiveDocumentId] = useState<Id<"documents"> | null>(null);
-  const [activeWhiteboardId, setActiveWhiteboardId] = useState<Id<"whiteboards"> | null>(null);
+  const [activeDocumentId, setActiveDocumentId] =
+    useState<Id<"documents"> | null>(null);
+  const [activeWhiteboardId, setActiveWhiteboardId] =
+    useState<Id<"whiteboards"> | null>(null);
 
   // Queries
   const session = useQuery(api.crud.session.getOne, { id: sessionId });
@@ -55,15 +59,18 @@ export default function ResearchDashboard() {
   }, [documents, whiteboards, activeDocumentId, activeWhiteboardId]);
 
   // Get active document and whiteboard
-  const activeDocument = documents?.find(doc => doc._id === activeDocumentId);
-  const activeWhiteboard = whiteboards?.find(wb => wb._id === activeWhiteboardId);
+  const activeDocument = documents?.find((doc) => doc._id === activeDocumentId);
+  const activeWhiteboard = whiteboards?.find(
+    (wb) => wb._id === activeWhiteboardId
+  );
   const updateDocument = useMutation(api.crud.document.update);
 
   // Get comments for active document
-  const comments = useQuery(
-    api.crud.comment.getByDocumentId,
-    activeDocumentId ? { documentId: activeDocumentId } : "skip"
-  ) || [];
+  const comments =
+    useQuery(
+      api.crud.comment.getByDocumentId,
+      activeDocumentId ? { documentId: activeDocumentId } : "skip"
+    ) || [];
 
   // Actions
   const handleChatbotQueryRaw = useAction(api.functions.ai.handleUserQuery);
@@ -80,7 +87,7 @@ export default function ResearchDashboard() {
       try {
         await updateDocument({
           id: activeDocument._id,
-          updates: { content, updatedAt: Date.now() }
+          updates: { content, updatedAt: Date.now() },
         });
       } catch (error) {
         console.error("Error updating document:", error);
@@ -105,10 +112,7 @@ export default function ResearchDashboard() {
     }
   }, [router, isAuthLoading, user]);
 
-  const handleAddComment = async (
-    content: string,
-    position: { y: number }
-  ) => {
+  const handleAddComment = async (content: string, position: { y: number }) => {
     if (!content.trim() || !user) {
       console.error("Cannot add comment: content is empty or user is null");
       return;
@@ -122,7 +126,7 @@ export default function ResearchDashboard() {
           position,
           updatedAt: Date.now(),
           resolved: false,
-        }
+        },
       });
     } catch (error) {
       console.error("Error creating comment:", error);
@@ -133,7 +137,7 @@ export default function ResearchDashboard() {
     try {
       await updateComment({
         id: commentId as Id<"comments">,
-        updates: { resolved: true, updatedAt: Date.now() }
+        updates: { resolved: true, updatedAt: Date.now() },
       });
     } catch (error) {
       console.error("Error resolving comment:", error);
@@ -161,7 +165,7 @@ export default function ResearchDashboard() {
           content,
           resolved: false,
           parentId: commentId as Id<"comments">,
-        }
+        },
       });
     } catch (error) {
       console.error("Error creating reply:", error);
@@ -193,8 +197,12 @@ export default function ResearchDashboard() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950/20">
         <div className="text-center">
           <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-foreground mb-2">Loading your research session...</h2>
-          <p className="text-muted-foreground">Please wait while we prepare your workspace</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">
+            Loading your research session...
+          </h2>
+          <p className="text-muted-foreground">
+            Please wait while we prepare your workspace
+          </p>
         </div>
       </div>
     );
@@ -268,7 +276,9 @@ export default function ResearchDashboard() {
           <div className="max-w-6xl mx-auto relative">
             {activeView === "editor" ? (
               activeDocument ? (
-                <div className="relative"> {/* Add this wrapper */}
+                <div className="relative">
+                  {" "}
+                  {/* Add this wrapper */}
                   <RichTextEditor
                     value={activeDocument.content || ""}
                     onChange={handleContentUpdate}
@@ -289,17 +299,15 @@ export default function ResearchDashboard() {
                   No document selected
                 </div>
               )
+            ) : activeWhiteboard ? (
+              <WhiteboardCanvas
+                whiteboardId={activeWhiteboardId || undefined}
+              />
             ) : (
-              activeWhiteboard ? (
-                <WhiteboardCanvas
-                  whiteboardId={activeWhiteboardId || undefined}
-                />
-              ) : (
-                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                  <Layout size={48} className="mx-auto mb-4 opacity-50" />
-                  No whiteboard selected
-                </div>
-              )
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <Layout size={48} className="mx-auto mb-4 opacity-50" />
+                No whiteboard selected
+              </div>
             )}
           </div>
         </div>
