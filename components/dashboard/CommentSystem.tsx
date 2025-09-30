@@ -36,6 +36,62 @@ interface Collaborator {
   email?: string;
 }
 
+// Component to render text with highlighted mentions
+const HighlightedText: React.FC<{ text: string; className?: string }> = ({ text, className = "" }) => {
+  // Parse mentions in the text
+  const parseMentions = (content: string) => {
+    const mentionRegex = /(@[^\s@]+)/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = mentionRegex.exec(content)) !== null) {
+      // Add text before the mention
+      if (match.index > lastIndex) {
+        parts.push({
+          type: 'text',
+          content: content.substring(lastIndex, match.index)
+        });
+      }
+
+      // Add the mention
+      parts.push({
+        type: 'mention',
+        content: match[1] // Remove the @ symbol
+      });
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push({
+        type: 'text',
+        content: content.substring(lastIndex)
+      });
+    }
+
+    return parts;
+  };
+
+  const parts = parseMentions(text);
+
+  return (
+    <span className={className}>
+      {parts.map((part, index) => {
+        if (part.type === 'mention') {
+          return (
+            <span key={index} className="font-bold text-blue-600 dark:text-blue-400">
+              @{part.content}
+            </span>
+          );
+        }
+        return <span key={index}>{part.content}</span>;
+      })}
+    </span>
+  );
+};
+
 export default function CommentSystem({
   comments,
   onAddComment,
@@ -385,7 +441,7 @@ export default function CommentSystem({
               value={newComment}
               onChange={(e) => handleTextareaChange(e.target.value, "newComment")}
               onKeyDown={(e) => handleKeyDown(e, "newComment")}
-              className="w-full text-sm border border-gray-300 rounded p-2 resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded p-2 resize-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="Type your comment... Use @ to mention collaborators"
               rows={4}
               autoFocus
@@ -393,13 +449,13 @@ export default function CommentSystem({
 
             {/* Mention dropdown */}
             {showMentionList && currentTextarea === "newComment" && (
-              <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 max-h-32 overflow-y-auto">
+              <div className="absolute bottom-full left-0 right-0 mb-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-30 max-h-32 overflow-y-auto">
                 {filteredCollaborators.length > 0 ? (
                   filteredCollaborators.map((collaborator: Collaborator, index: number) => (
                     <button
                       key={collaborator._id}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 ${
-                        index === selectedMentionIndex ? "bg-blue-50" : ""
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 ${
+                        index === selectedMentionIndex ? "bg-blue-50 dark:bg-blue-900/50" : ""
                       }`}
                       onClick={() => insertMention(collaborator)}
                     >
@@ -407,13 +463,13 @@ export default function CommentSystem({
                         {(collaborator.name || collaborator.email)?.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-medium truncate">{collaborator.name}</div>
-                        <div className="text-xs text-gray-500 truncate">{collaborator.email}</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100 truncate">{collaborator.name}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{collaborator.email}</div>
                       </div>
                     </button>
                   ))
                 ) : (
-                  <div className="px-3 py-2 text-sm text-gray-500">No collaborators found</div>
+                  <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No collaborators found</div>
                 )}
               </div>
             )}
@@ -490,16 +546,18 @@ export default function CommentSystem({
                       </button>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{comment.content}</p>
+                  <div className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                    <HighlightedText text={comment.content} />
+                  </div>
 
                   {/* Show assigned users if any */}
                   {comment.assignedTo && comment.assignedTo.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
-                      <span className="text-xs text-gray-500">Assigned to:</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Assigned to:</span>
                       {comment.assignedTo.map((userId: any) => {
                         const assignedUser = collaboratorUsers?.find((u: Collaborator) => u._id === userId);
                         return assignedUser ? (
-                          <span key={userId} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                          <span key={userId} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs">
                             <AtSign size={10} />
                             {assignedUser.name || assignedUser.email}
                           </span>
@@ -508,7 +566,7 @@ export default function CommentSystem({
                     </div>
                   )}
 
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                     {new Date(comment._creationTime).toLocaleString()}
                   </p>
 
@@ -534,7 +592,9 @@ export default function CommentSystem({
                                 <Trash2 size={12} />
                               </button>
                             </div>
-                            <p className="text-xs text-gray-600 mt-1">{reply.content}</p>
+                            <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                              <HighlightedText text={reply.content} />
+                            </div>
 
                             {/* Show assigned users in replies if any */}
                             {reply.assignedTo && reply.assignedTo.length > 0 && (
@@ -542,7 +602,7 @@ export default function CommentSystem({
                                 {reply.assignedTo.map((userId: any) => {
                                   const assignedUser = collaboratorUsers?.find((u: Collaborator) => u._id === userId);
                                   return assignedUser ? (
-                                    <span key={userId} className="inline-flex items-center gap-1 px-1 bg-blue-100 text-blue-800 rounded text-xs">
+                                    <span key={userId} className="inline-flex items-center gap-1 px-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs">
                                       <AtSign size={8} />
                                       {assignedUser.name || assignedUser.email}
                                     </span>
@@ -551,7 +611,7 @@ export default function CommentSystem({
                               </div>
                             )}
 
-                            <p className="text-xs text-gray-400 mt-1">
+                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                               {new Date(reply._creationTime).toLocaleString()}
                             </p>
                           </div>
@@ -578,7 +638,7 @@ export default function CommentSystem({
                           value={replyContent}
                           onChange={(e) => handleTextareaChange(e.target.value, "reply")}
                           onKeyDown={(e) => handleKeyDown(e, "reply")}
-                          className="w-full text-sm border border-gray-300 rounded p-2 resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                          className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded p-2 resize-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                           placeholder="Type your reply... Use @ to mention collaborators"
                           rows={3}
                           autoFocus
@@ -586,13 +646,13 @@ export default function CommentSystem({
 
                         {/* Mention dropdown for reply */}
                         {showMentionList && currentTextarea === "reply" && (
-                          <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 max-h-32 overflow-y-auto">
+                          <div className="absolute bottom-full left-0 right-0 mb-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-30 max-h-32 overflow-y-auto">
                             {filteredCollaborators.length > 0 ? (
                               filteredCollaborators.map((collaborator: Collaborator, index: number) => (
                                 <button
                                   key={collaborator._id}
-                                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 ${
-                                    index === selectedMentionIndex ? "bg-blue-50" : ""
+                                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 ${
+                                    index === selectedMentionIndex ? "bg-blue-50 dark:bg-blue-900/50" : ""
                                   }`}
                                   onClick={() => insertMention(collaborator)}
                                 >
@@ -600,13 +660,13 @@ export default function CommentSystem({
                                     {(collaborator.name || collaborator.email)?.charAt(0).toUpperCase()}
                                   </div>
                                   <div className="min-w-0">
-                                    <div className="font-medium truncate">{collaborator.name}</div>
-                                    <div className="text-xs text-gray-500 truncate">{collaborator.email}</div>
+                                    <div className="font-medium text-gray-900 dark:text-gray-100 truncate">{collaborator.name}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{collaborator.email}</div>
                                   </div>
                                 </button>
                               ))
                             ) : (
-                              <div className="px-3 py-2 text-sm text-gray-500">No collaborators found</div>
+                              <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No collaborators found</div>
                             )}
                           </div>
                         )}
