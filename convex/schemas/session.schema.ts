@@ -5,6 +5,7 @@ export const sessionSchema = {
   creatorId: v.string(),
   status: v.union(v.literal("active"), v.literal("archived")),
   collaboratorIds: v.array(v.string()),
+  activeWhiteboardId: v.optional(v.id("whiteboards")),
   updatedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
 };

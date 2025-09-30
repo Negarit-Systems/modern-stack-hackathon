@@ -11,6 +11,11 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { authClient } from "@/app/lib/auth.client";
+import WhiteboardCanvas from "@/components/canvas/Whiteboard";
+import DocumentSwitcher from "@/components/canvas/DocumentSwitcher";
+import WhiteboardSwitcher from "@/components/canvas/WhiteboardSwitcher";
+
+type ActiveView = "editor" | "whiteboard";
 
 export default function ResearchDashboard() {
   const params = useParams();
@@ -19,12 +24,29 @@ export default function ResearchDashboard() {
   const authenticatedUser = authClient.useSession();
   const user = authenticatedUser?.data?.user || null;
   const sessionId = (params?.sessionId ?? "") as Id<"sessions">;
+  const [activeView, setActiveView] = useState<ActiveView>("editor");
+  const [activeDocumentId, setActiveDocumentId] = useState<Id<"documents"> | null>(null);
+  const [activeWhiteboardId, setActiveWhiteboardId] = useState<Id<"whiteboards"> | null>(null);
 
   // Queries
   const session = useQuery(api.crud.session.getOne, { id: sessionId });
-  const document = useQuery(api.crud.document.getBySession, { sessionId });
+  const documents = useQuery(api.crud.document.getBySession, { sessionId });
+  const whiteboards = useQuery(api.crud.whiteboard.getBySession, { sessionId });
   const updateDocument = useMutation(api.crud.document.update);
-  // const collaborators = useQuery(api.crud.session.getCollaborators, { sessionId });
+
+  // Set default active items when data loads
+  useEffect(() => {
+    if (documents && documents.length > 0 && !activeDocumentId) {
+      setActiveDocumentId(documents[0]._id);
+    }
+    if (whiteboards && whiteboards.length > 0 && !activeWhiteboardId) {
+      setActiveWhiteboardId(whiteboards[0]._id);
+    }
+  }, [documents, whiteboards, activeDocumentId, activeWhiteboardId]);
+
+  // Get active document and whiteboard
+  const activeDocument = documents?.find(doc => doc._id === activeDocumentId);
+  const activeWhiteboard = whiteboards?.find(wb => wb._id === activeWhiteboardId);
 
   // Actions
   const handleChatbotQueryRaw = useAction(api.functions.ai.handleUserQuery);
@@ -37,11 +59,11 @@ export default function ResearchDashboard() {
   };
 
   const handleContentUpdate = async (content: string) => {
-    if (document) {
+    if (activeDocument) {
       try {
         await updateDocument({
-          id: document._id,
-          updates: { content },
+          id: activeDocument._id,
+          updates: { content, updatedAt: Date.now() }
         });
       } catch (error) {
         console.error("Error updating document:", error);
@@ -153,24 +175,84 @@ export default function ResearchDashboard() {
           onExport={handleExport}
         />
 
-        {/* Document Editor with Comment System */}
-        <div className="flex-1 p-6 relative dark:p-8">
-          <div className="max-w-4xl mx-auto relative dark:max-w-5xl">
-            <CommentSystem
-              comments={comments}
-              collaborators={collaborators!}
-              user={user}
-              onAddComment={handleAddComment}
-              onResolveComment={handleResolveComment}
-              onReplyToComment={handleReplyToComment}
-            />
-            <div className="dark:bg-gradient-to-br dark:from-slate-900/50 dark:via-slate-800/30 dark:to-blue-900/10 dark:border dark:border-slate-700/50 dark:rounded-2xl dark:p-8 dark:shadow-2xl dark:backdrop-blur-sm">
-              <RichTextEditor
-                value={document?.content || ""}
-                onChange={handleContentUpdate}
-                placeholder="Begin your research document..."
+        {/* View Toggle and Switchers */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+          <div className="flex gap-2">
+            <button
+              className={`px-4 py-2 rounded-l border ${
+                activeView === "editor"
+                  ? "bg-primary text-white border-primary"
+                  : "bg-white border-gray-300 hover:bg-gray-50"
+              }`}
+              onClick={() => setActiveView("editor")}
+            >
+              Editor
+            </button>
+            <button
+              className={`px-4 py-2 rounded-r border ${
+                activeView === "whiteboard"
+                  ? "bg-primary text-white border-primary"
+                  : "bg-white border-gray-300 hover:bg-gray-50"
+              }`}
+              onClick={() => setActiveView("whiteboard")}
+            >
+              Whiteboard
+            </button>
+          </div>
+
+          <div className="flex gap-4">
+            {activeView === "editor" ? (
+              <DocumentSwitcher
+                sessionId={sessionId}
+                activeDocumentId={activeDocumentId}
+                onDocumentChange={setActiveDocumentId}
               />
-            </div>
+            ) : (
+              <WhiteboardSwitcher
+                sessionId={sessionId}
+                activeWhiteboardId={activeWhiteboardId}
+                onWhiteboardChange={setActiveWhiteboardId}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Document Editor with Comment System */}
+        <div className="flex-1 p-6 relative">
+          <div className="max-w-6xl mx-auto relative">
+            {activeView === "editor" ? (
+              activeDocument ? (
+                <>
+                  <CommentSystem
+                    comments={comments}
+                    collaborators={collaborators!}
+                    user={user}
+                    onAddComment={handleAddComment}
+                    onResolveComment={handleResolveComment}
+                    onReplyToComment={handleReplyToComment}
+                  />
+                  <RichTextEditor
+                    value={activeDocument.content || ""}
+                    onChange={handleContentUpdate}
+                    placeholder="Begin your research document..."
+                  />
+                </>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  No document selected
+                </div>
+              )
+            ) : (
+              activeWhiteboard ? (
+                <WhiteboardCanvas
+                  whiteboardId={activeWhiteboardId || undefined}
+                />
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  No whiteboard selected
+                </div>
+              )
+            )}
           </div>
         </div>
       </div>
@@ -180,14 +262,6 @@ export default function ResearchDashboard() {
         onClose={() => setShowInviteModal(false)}
         sessionId={sessionId}
       />
-      {/* <ExportModal
-        isOpen={showExportModal}
-        onClose={() => setShowExportModal(false)}
-        session={session}
-        document={document}
-        summaries={summaries}
-        comments={comments}
-      /> */}
     </div>
   ) : null;
 }

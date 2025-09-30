@@ -37,5 +37,8 @@ export default defineSchema({
   insights: defineTable(schemas.insightsSchema).index("by_sessionId", [
     "sessionId",
   ]),
+  whiteboards: defineTable(schemas.whiteboardsSchema).index("by_sessionId", [
+    "sessionId",
+  ]),
   testSchema: defineTable(schemas.testSchema),
 });
