@@ -42,7 +42,7 @@ export default function Sidebar({
                 Research Session
               </h2>
               <p className="text-xs text-muted-foreground truncate dark:text-sm dark:text-slate-400">
-                {session?.topic || "Untitled Session"}
+                {session?.title || "Untitled Session"}
               </p>
             </div>
           )}
