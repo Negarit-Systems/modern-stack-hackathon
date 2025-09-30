@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { MessageSquare, Send, X, Check, Trash2, Reply } from "lucide-react";
+import { MessageSquare, Send, X, Check, Trash2, Reply, HelpCircle } from "lucide-react";
 
 interface Comment {
   _id: string;
@@ -40,6 +40,7 @@ export default function CommentSystem({
   const [activeComment, setActiveComment] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   // Filter out deleted comments and organize comments with replies
   const activeComments = comments.filter(comment => !comment.deletedAt);
@@ -304,11 +305,32 @@ export default function CommentSystem({
       )}
 
       {/* Instructions */}
-      <div className="fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-600 max-w-md w-90 shadow-sm">
-        <p className="font-medium mb-1 text-gray-800">💡 Comment Tips:</p>
-        <p>• Click right-edge rail on the document to comment</p>
-        <p>• Click comment icons to view, reply, or resolve</p>
-        <p>• Use @ to mention collaborators</p>
+      <div className="fixed bottom-4 right-4 z-20">
+        {showHelp ? (
+          <div className="bg-card border border-border rounded-lg p-3 text-sm text-muted-foreground max-w-xs shadow-lg">
+            <div className="flex items-center justify-between mb-2">
+              <p className="font-medium">💡 Comment Tips:</p>
+              <button
+                onClick={() => setShowHelp(false)}
+                className="p-1 hover:bg-accent rounded transition-colors"
+                title="Close help"
+              >
+                <X size={14} />
+              </button>
+            </div>
+           <p>• Click right-edge rail on the document to comment</p>
+           <p>• Click comment icons to view, reply, or resolve</p>
+           <p>• Use @ to mention collaborators</p>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowHelp(true)}
+            className="bg-card border border-border rounded-lg p-2 hover:bg-accent transition-colors shadow-lg"
+            title="Show help"
+          >
+            <HelpCircle size={26} className="text-muted-foreground" />
+          </button>
+        )}
       </div>
     </>
   );
