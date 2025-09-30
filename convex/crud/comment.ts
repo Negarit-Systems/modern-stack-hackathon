@@ -11,6 +11,18 @@ export const get = query({
   },
 });
 
+export const getByDocumentId = query({
+  args: { documentId: v.id("documents") },
+  handler: async (ctx, { documentId }) => {
+    const item = await ctx.db
+      .query("comments")
+      .withIndex("by_documentId", (q) => q.eq("documentId", documentId))
+      .order("asc")
+      .collect();
+    return item;
+  },
+});
+
 export const getOne = query({
   args: { id: v.id("comments") },
   handler: async (ctx, { id }) => {

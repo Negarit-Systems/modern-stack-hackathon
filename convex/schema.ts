@@ -24,8 +24,8 @@ export default defineSchema({
     "sessionId",
     "userId",
   ]),
-  comments: defineTable(schemas.commentSchema).index("by_sessionId", [
-    "sessionId",
+  comments: defineTable(schemas.commentSchema).index("by_documentId", [
+    "documentId",
   ]),
   invites: defineTable(schemas.inviteSchema).index("by_sessionId", [
     "sessionId",
