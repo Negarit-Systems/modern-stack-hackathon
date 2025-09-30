@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { MessageSquare, Send, X, Check, Trash2, Reply, HelpCircle } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { MessageSquare, Send, X, Check, Trash2, Reply, HelpCircle, AtSign } from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import { useQuery } from "convex/react";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface Comment {
   _id: string;
@@ -10,7 +13,7 @@ interface Comment {
   parentId?: string;
   content: string;
   resolved: boolean;
-  assignedTo?: string;
+  assignedTo?: string[];
   updatedAt?: number;
   deletedAt?: number;
   position?: { y: number };
@@ -20,20 +23,26 @@ interface Comment {
 
 interface CommentSystemProps {
   comments: any[];
-  user: any;
-  onAddComment: (content: string, position: { y: number }) => void;
+  onAddComment: (content: string, position: { y: number }, assignedTo?: string[]) => void;
   onResolveComment: (commentId: string) => void;
-  onReply: (commentId: string, content: string) => void;
+  onReply: (commentId: string, content: string, assignedTo?: string[]) => void;
   deleteComment: (commentId: string) => void;
+  collaboratorUsers: any[];
+}
+
+interface Collaborator {
+  _id: string;
+  name?: string;
+  email?: string;
 }
 
 export default function CommentSystem({
   comments,
-  user,
   onAddComment,
   onResolveComment,
   onReply,
-  deleteComment
+  deleteComment,
+  collaboratorUsers
 }: CommentSystemProps) {
   const [newComment, setNewComment] = useState("");
   const [commentY, setCommentY] = useState<number | null>(null);
@@ -41,6 +50,16 @@ export default function CommentSystem({
   const [replyContent, setReplyContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+
+  // Tagging states
+  const [showMentionList, setShowMentionList] = useState(false);
+  const [mentionPosition, setMentionPosition] = useState(0);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
+  const [currentTextarea, setCurrentTextarea] = useState<"newComment" | "reply" | null>(null);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const replyTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Filter out deleted comments and organize comments with replies
   const activeComments = comments.filter(comment => !comment.deletedAt);
@@ -51,9 +70,126 @@ export default function CommentSystem({
     return replies.filter(reply => reply.parentId === commentId);
   };
 
+  // Filter collaborators based on mention query
+  const filteredCollaborators = collaboratorUsers?.filter((collaborator: Collaborator) =>
+    collaborator.name?.toLowerCase().includes(mentionQuery.toLowerCase()) ||
+    collaborator.email?.toLowerCase().includes(mentionQuery.toLowerCase())
+  ) || [];
+
+  // Handle @ mention detection
+  const handleTextareaChange = (value: string, textareaType: "newComment" | "reply") => {
+    if (textareaType === "newComment") {
+      setNewComment(value);
+    } else {
+      setReplyContent(value);
+    }
+
+    const textarea = textareaType === "newComment" ? textareaRef.current : replyTextareaRef.current;
+    if (!textarea) return;
+
+    const cursorPosition = textarea.selectionStart;
+    const textBeforeCursor = value.substring(0, cursorPosition);
+
+    // Check for @ mention
+    const atSymbolIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (atSymbolIndex !== -1) {
+      const textAfterAt = textBeforeCursor.substring(atSymbolIndex + 1);
+      const hasSpace = textAfterAt.includes(' ');
+
+      if (!hasSpace) {
+        setShowMentionList(true);
+        setMentionPosition(atSymbolIndex);
+        setMentionQuery(textAfterAt);
+        setSelectedMentionIndex(0);
+        setCurrentTextarea(textareaType);
+        return;
+      }
+    }
+
+    setShowMentionList(false);
+    setCurrentTextarea(null);
+  };
+
+  // Insert mention into textarea
+  const insertMention = (collaborator: Collaborator) => {
+    const mentionText = `@${collaborator.name || collaborator.email} `;
+    const textarea = currentTextarea === "newComment" ? textareaRef.current : replyTextareaRef.current;
+
+    if (!textarea) return;
+
+    const currentValue = currentTextarea === "newComment" ? newComment : replyContent;
+    const beforeMention = currentValue.substring(0, mentionPosition);
+    const afterMention = currentValue.substring(textarea.selectionStart);
+    const newValue = beforeMention + mentionText + afterMention;
+
+    if (currentTextarea === "newComment") {
+      setNewComment(newValue);
+    } else {
+      setReplyContent(newValue);
+    }
+
+    setShowMentionList(false);
+    setCurrentTextarea(null);
+
+    // Focus back to textarea and set cursor position
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = beforeMention.length + mentionText.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
+
+  // Handle keyboard navigation in mention list
+  const handleKeyDown = (e: React.KeyboardEvent, textareaType: "newComment" | "reply") => {
+    if (showMentionList && filteredCollaborators.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedMentionIndex(prev =>
+          prev < filteredCollaborators.length - 1 ? prev + 1 : prev
+        );
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedMentionIndex(prev => prev > 0 ? prev - 1 : 0);
+      } else if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        insertMention(filteredCollaborators[selectedMentionIndex]);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowMentionList(false);
+        setCurrentTextarea(null);
+      }
+    } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      if (textareaType === "newComment") {
+        handleSubmit();
+      } else if (replyingTo) {
+        handleReplySubmit(replyingTo);
+      }
+    }
+  };
+
+  // Extract assigned users from content
+  const extractAssignedUsers = (content: string): string[] => {
+    const assignedUsers: string[] = [];
+    const mentionRegex = /@([^@\s]+)(?=\s|$)/g;
+    let match;
+
+    while ((match = mentionRegex.exec(content)) !== null) {
+      const mentionText = match[1];
+      const collaborator = collaboratorUsers?.find(
+        (coll: Collaborator) => coll.name === mentionText || coll.email === mentionText
+      );
+      if (collaborator) {
+        assignedUsers.push(collaborator._id);
+      }
+    }
+
+    return assignedUsers;
+  };
+
   const handleRailClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const y = e.clientY - rect.top; // position inside editor
+    const y = e.clientY - rect.top;
     setCommentY(y);
     setNewComment("");
   };
@@ -61,7 +197,8 @@ export default function CommentSystem({
   const handleSubmit = () => {
     if (!newComment.trim() || commentY === null) return;
 
-    onAddComment(newComment, { y: commentY });
+    const assignedTo = extractAssignedUsers(newComment);
+    onAddComment(newComment, { y: commentY }, assignedTo);
     setNewComment("");
     setCommentY(null);
   };
@@ -69,7 +206,8 @@ export default function CommentSystem({
   const handleReplySubmit = (commentId: string) => {
     if (!replyContent.trim()) return;
 
-    onReply(commentId, replyContent);
+    const assignedTo = extractAssignedUsers(replyContent);
+    onReply(commentId, replyContent, assignedTo);
     setReplyContent("");
     setReplyingTo(null);
   };
@@ -81,30 +219,29 @@ export default function CommentSystem({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      if (replyingTo) {
-        handleReplySubmit(replyingTo);
-      } else {
-        handleSubmit();
+  // Close mention list when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showMentionList && !(e.target as Element).closest('.mention-container')) {
+        setShowMentionList(false);
+        setCurrentTextarea(null);
       }
-    }
-  };
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMentionList]);
 
   return (
     <>
-      {/* Vertical comment rail - positioned absolutely over the editor */}
+      {/* Vertical comment rail */}
       <div
         className="absolute top-0 right-0 w-0 h-full cursor-pointer group z-10"
         onClick={handleRailClick}
       >
-        {/* Rail line - make it more visible */}
         <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gray-400 group-hover:bg-blue-500 transition-colors transform -translate-x-1/2"></div>
-
-        {/* Hover indicator */}
         <div className="absolute inset-0 bg-transparent group-hover:bg-blue-50/30 transition-colors"></div>
 
-        {/* markers for main comments only (not replies) */}
         {mainComments.map((comment) => (
           <div
             key={comment._id}
@@ -132,7 +269,7 @@ export default function CommentSystem({
       {/* Comment form at clicked Y */}
       {commentY !== null && (
         <div
-          className="absolute right-8 w-64 bg-white border border-gray-200 rounded-lg p-4 shadow-lg z-20"
+          className="absolute right-8 w-64 bg-white border border-gray-200 rounded-lg p-4 shadow-lg z-20 mention-container"
           style={{ top: Math.max(commentY - 100, 10) }}
         >
           <div className="flex items-center justify-between mb-3">
@@ -144,15 +281,45 @@ export default function CommentSystem({
               <X size={14} />
             </button>
           </div>
-          <textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            onKeyDown={handleKeyPress}
-            className="w-full text-sm border border-gray-300 rounded p-2 resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            placeholder="Type your comment..."
-            rows={4}
-            autoFocus
-          />
+          <div className="relative">
+            <textarea
+              ref={textareaRef}
+              value={newComment}
+              onChange={(e) => handleTextareaChange(e.target.value, "newComment")}
+              onKeyDown={(e) => handleKeyDown(e, "newComment")}
+              className="w-full text-sm border border-gray-300 rounded p-2 resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="Type your comment... Use @ to mention collaborators"
+              rows={4}
+              autoFocus
+            />
+
+            {/* Mention dropdown */}
+            {showMentionList && currentTextarea === "newComment" && (
+              <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 max-h-32 overflow-y-auto">
+                {filteredCollaborators.length > 0 ? (
+                  filteredCollaborators.map((collaborator: Collaborator, index: number) => (
+                    <button
+                      key={collaborator._id}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 ${
+                        index === selectedMentionIndex ? "bg-blue-50" : ""
+                      }`}
+                      onClick={() => insertMention(collaborator)}
+                    >
+                      <div className="flex-shrink-0 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-medium">
+                        {(collaborator.name || collaborator.email)?.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">{collaborator.name}</div>
+                        <div className="text-xs text-gray-500 truncate">{collaborator.email}</div>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-3 py-2 text-sm text-gray-500">No collaborators found</div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="flex justify-between items-center mt-3">
             <span className="text-xs text-gray-500">
               Ctrl+Enter to save
@@ -172,7 +339,7 @@ export default function CommentSystem({
       {/* Active comment popup */}
       {activeComment && (
         <div
-          className="absolute right-8 w-80 bg-white border border-gray-200 rounded-lg p-4 shadow-lg z-30 max-h-96 overflow-y-auto"
+          className="absolute right-8 w-80 bg-white border border-gray-200 rounded-lg p-4 shadow-lg z-30 max-h-96 overflow-y-auto mention-container"
           style={{
             top: Math.max(mainComments.find(c => c._id === activeComment)?.position?.y - 100 || 0, 10)
           }}
@@ -226,6 +393,23 @@ export default function CommentSystem({
                     </div>
                   </div>
                   <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{comment.content}</p>
+
+                  {/* Show assigned users if any */}
+                  {comment.assignedTo && comment.assignedTo.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      <span className="text-xs text-gray-500">Assigned to:</span>
+                      {comment.assignedTo.map((userId: any) => {
+                        const assignedUser = collaboratorUsers?.find((u: Collaborator) => u._id === userId);
+                        return assignedUser ? (
+                          <span key={userId} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                            <AtSign size={10} />
+                            {assignedUser.name || assignedUser.email}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
+
                   <p className="text-xs text-gray-500 mt-2">
                     {new Date(comment._creationTime).toLocaleString()}
                   </p>
@@ -253,6 +437,22 @@ export default function CommentSystem({
                               </button>
                             </div>
                             <p className="text-xs text-gray-600 mt-1">{reply.content}</p>
+
+                            {/* Show assigned users in replies if any */}
+                            {reply.assignedTo && reply.assignedTo.length > 0 && (
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {reply.assignedTo.map((userId: any) => {
+                                  const assignedUser = collaboratorUsers?.find((u: Collaborator) => u._id === userId);
+                                  return assignedUser ? (
+                                    <span key={userId} className="inline-flex items-center gap-1 px-1 bg-blue-100 text-blue-800 rounded text-xs">
+                                      <AtSign size={8} />
+                                      {assignedUser.name || assignedUser.email}
+                                    </span>
+                                  ) : null;
+                                })}
+                              </div>
+                            )}
+
                             <p className="text-xs text-gray-400 mt-1">
                               {new Date(reply._creationTime).toLocaleString()}
                             </p>
@@ -274,15 +474,45 @@ export default function CommentSystem({
                           <X size={12} />
                         </button>
                       </div>
-                      <textarea
-                        value={replyContent}
-                        onChange={(e) => setReplyContent(e.target.value)}
-                        onKeyDown={handleKeyPress}
-                        className="w-full text-sm border border-gray-300 rounded p-2 resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        placeholder="Type your reply..."
-                        rows={3}
-                        autoFocus
-                      />
+                      <div className="relative">
+                        <textarea
+                          ref={replyTextareaRef}
+                          value={replyContent}
+                          onChange={(e) => handleTextareaChange(e.target.value, "reply")}
+                          onKeyDown={(e) => handleKeyDown(e, "reply")}
+                          className="w-full text-sm border border-gray-300 rounded p-2 resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Type your reply... Use @ to mention collaborators"
+                          rows={3}
+                          autoFocus
+                        />
+
+                        {/* Mention dropdown for reply */}
+                        {showMentionList && currentTextarea === "reply" && (
+                          <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 max-h-32 overflow-y-auto">
+                            {filteredCollaborators.length > 0 ? (
+                              filteredCollaborators.map((collaborator: Collaborator, index: number) => (
+                                <button
+                                  key={collaborator._id}
+                                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 ${
+                                    index === selectedMentionIndex ? "bg-blue-50" : ""
+                                  }`}
+                                  onClick={() => insertMention(collaborator)}
+                                >
+                                  <div className="flex-shrink-0 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-medium">
+                                    {(collaborator.name || collaborator.email)?.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="font-medium truncate">{collaborator.name}</div>
+                                    <div className="text-xs text-gray-500 truncate">{collaborator.email}</div>
+                                  </div>
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-3 py-2 text-sm text-gray-500">No collaborators found</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                       <div className="flex justify-between items-center mt-2">
                         <span className="text-xs text-gray-500">
                           Ctrl+Enter to send

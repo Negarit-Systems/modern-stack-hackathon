@@ -48,6 +48,12 @@ export default function ResearchDashboard() {
   const updateComment = useMutation(api.crud.comment.update);
   const deleteComment = useMutation(api.crud.comment.deleteOne);
 
+    // collaborators
+  const collaboratorResults = useQuery(api.crud.users.getCollaboratorUsers, {
+    sessionId,
+  });
+  const collaboratorUsers = collaboratorResults?.collaborators?.page || [];
+
   // Set default active items when data loads
   useEffect(() => {
     if (documents && documents.length > 0 && !activeDocumentId) {
@@ -286,11 +292,11 @@ export default function ResearchDashboard() {
                   />
                   <CommentSystem
                     comments={comments}
-                    user={user}
                     onAddComment={handleAddComment}
                     onResolveComment={handleResolveComment}
                     onReply={handleReplyToComment}
                     deleteComment={handleDeleteComment}
+                    collaboratorUsers={collaboratorUsers}
                   />
                 </div>
               ) : (

@@ -20,7 +20,6 @@ export default function SupportPage() {
 
     try {
       // Mock support ticket submission
-      console.log("[v0] Support ticket submitted:", formData)
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       alert("Support ticket submitted successfully! We'll get back to you soon.")

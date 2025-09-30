@@ -26,7 +26,6 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const userData = localStorage.getItem("user")
-    console.log("Loaded user data:", userData)
     if (userData) {
       const parsedUser = JSON.parse(userData)
       setUser(parsedUser)
@@ -46,9 +45,6 @@ export default function ProfilePage() {
     setLoading(true)
 
     try {
-      // Mock profile update
-      console.log("[v0] Updating profile:", profileData)
-
       const updatedUser = {
         ...user,
         name: profileData.name,
@@ -74,7 +70,6 @@ export default function ProfilePage() {
   const handleDeleteSession = (sessionId: string) => {
     if (confirm("Are you sure you want to delete this session?")) {
       setSessions((prev) => prev ? prev.filter((s: Session) => s.id !== sessionId) : prev)
-      console.log("[v0] Session deleted:", sessionId)
     }
   }
 
