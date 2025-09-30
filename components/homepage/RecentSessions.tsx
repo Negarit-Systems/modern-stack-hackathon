@@ -17,10 +17,6 @@ export default function RecentSessions({ user }: RecentSessionsProps) {
     router.push(`/dashboard/${sessionId}`)
   }
 
-  if (!user) {
-    return null
-  }
-
   return (
     <section className="container mx-auto px-4 pb-16 relative">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

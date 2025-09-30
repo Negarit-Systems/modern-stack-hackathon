@@ -42,7 +42,7 @@ export default function WhiteboardSwitcher({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700"
       >
         <Layout size={16} />
         <span className="max-w-40 truncate">
@@ -52,12 +52,12 @@ export default function WhiteboardSwitcher({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
-          <div className="p-2 border-b border-gray-200">
+        <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-300 rounded-lg shadow-lg z-10 dark:bg-gray-800 dark:border-gray-600">
+          <div className="p-2 border-b border-gray-200 dark:border-gray-600">
             {!isCreating ? (
               <button
                 onClick={() => setIsCreating(true)}
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md"
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md dark:text-gray-300 dark:hover:bg-gray-700"
               >
                 <Plus size={16} />
                 Create New Whiteboard
@@ -69,7 +69,7 @@ export default function WhiteboardSwitcher({
                   setIsCreating(false);
                   setNewTitle("");
                 }}
-                className="p-1 text-gray-500 hover:text-gray-700"
+                className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
                 <X size={12} />
               </button>
@@ -78,7 +78,7 @@ export default function WhiteboardSwitcher({
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 placeholder="Title"
-                className="w-38 px-1 py-1 border rounded-md text-sm"
+                className="w-38 px-1 py-1 border rounded-md text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
               <button
                 onClick={handleCreateWhiteboard}
@@ -101,8 +101,8 @@ export default function WhiteboardSwitcher({
                 }}
                 className={`flex items-center gap-2 w-full px-3 py-2 text-sm text-left ${
                   whiteboard._id === activeWhiteboardId
-                    ? "bg-blue-50 text-blue-600"
-                    : "hover:bg-gray-100"
+                    ? "bg-blue-50 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400"
+                    : "hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
                 <Layout size={16} />

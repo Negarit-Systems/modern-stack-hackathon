@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { MessageSquare, Send, AtSign, X, Check } from "lucide-react";
+import { MessageSquare, Send, AtSign, X, Check, HelpCircle } from "lucide-react";
 
 interface Comment {
   id: string;
@@ -37,6 +37,7 @@ export default function CommentSystem({
   const [showMentions, setShowMentions] = useState(false);
   const [activeComment, setActiveComment] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
+  const [showHelp, setShowHelp] = useState(false);
 
   const handleDocumentClick = (e: React.MouseEvent) => {
     if (e.ctrlKey || e.metaKey) {
@@ -293,12 +294,33 @@ export default function CommentSystem({
         </div>
       )}
 
-      {/* Instructions */}
-      <div className="fixed bottom-4 right-4 bg-card border border-border rounded-lg p-3 text-sm text-muted-foreground max-w-xs">
-        <p className="font-medium mb-1">💡 Comment Tips:</p>
-        <p>• Ctrl/Cmd + Click to add comments</p>
-        <p>• Click comment dots to view/reply</p>
-        <p>• Use @ to mention collaborators</p>
+      {/* Collapsible Help */}
+      <div className="fixed bottom-4 right-4 z-20">
+        {showHelp ? (
+          <div className="bg-card border border-border rounded-lg p-3 text-sm text-muted-foreground max-w-xs shadow-lg">
+            <div className="flex items-center justify-between mb-2">
+              <p className="font-medium">💡 Comment Tips:</p>
+              <button
+                onClick={() => setShowHelp(false)}
+                className="p-1 hover:bg-accent rounded transition-colors"
+                title="Close help"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <p>• Ctrl/Cmd + Click to add comments</p>
+            <p>• Click comment dots to view/reply</p>
+            <p>• Use @ to mention collaborators</p>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowHelp(true)}
+            className="bg-card border border-border rounded-lg p-2 hover:bg-accent transition-colors shadow-lg"
+            title="Show help"
+          >
+            <HelpCircle size={26} className="text-muted-foreground" />
+          </button>
+        )}
       </div>
     </div>
   );

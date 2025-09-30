@@ -14,6 +14,7 @@ import { authClient } from "@/app/lib/auth.client";
 import WhiteboardCanvas from "@/components/canvas/Whiteboard";
 import DocumentSwitcher from "@/components/canvas/DocumentSwitcher";
 import WhiteboardSwitcher from "@/components/canvas/WhiteboardSwitcher";
+import { FileText, Layout } from "lucide-react";
 
 type ActiveView = "editor" | "whiteboard";
 
@@ -22,7 +23,12 @@ export default function ResearchDashboard() {
   const router = useRouter();
 
   const authenticatedUser = authClient.useSession();
-  const user = authenticatedUser?.data?.user || null;
+  // The better-auth hook exposes `data` which is `undefined` while loading,
+  // becomes `null` for unauthenticated, or an object for authenticated.
+  const authData = (authenticatedUser as any)?.data;
+  const authPending = (authenticatedUser as any)?.isPending || (authenticatedUser as any)?.isLoading || false;
+  const isAuthLoading = authData === undefined || authPending;
+  const user = authData?.user || null;
   const sessionId = (params?.sessionId ?? "") as Id<"sessions">;
   const [activeView, setActiveView] = useState<ActiveView>("editor");
   const [activeDocumentId, setActiveDocumentId] = useState<Id<"documents"> | null>(null);
@@ -82,10 +88,12 @@ export default function ResearchDashboard() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user) {
+    // Only redirect to root when auth has finished resolving (data is not undefined)
+    // and there's no authenticated user.
+    if (!isAuthLoading && !user) {
       router.push("/");
     }
-  }, [router]);
+  }, [router, isAuthLoading, user]);
 
   const handleAddComment = (
     content: string,
@@ -154,6 +162,19 @@ export default function ResearchDashboard() {
     setMessages((prev) => [...prev, messageObj]);
   };
 
+  // Show a loading state while auth is resolving or the session query is pending
+  if (isAuthLoading || session === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950/20">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-foreground mb-2">Loading your research session...</h2>
+          <p className="text-muted-foreground">Please wait while we prepare your workspace</p>
+        </div>
+      </div>
+    );
+  }
+
   return session ? (
     <div className="min-h-screen bg-background flex dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-blue-950/20">
       <Sidebar
@@ -176,13 +197,13 @@ export default function ResearchDashboard() {
         />
 
         {/* View Toggle and Switchers */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
           <div className="flex gap-2">
             <button
               className={`px-4 py-2 rounded-l border ${
                 activeView === "editor"
                   ? "bg-primary text-white border-primary"
-                  : "bg-white border-gray-300 hover:bg-gray-50"
+                  : "bg-white border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700"
               }`}
               onClick={() => setActiveView("editor")}
             >
@@ -192,7 +213,7 @@ export default function ResearchDashboard() {
               className={`px-4 py-2 rounded-r border ${
                 activeView === "whiteboard"
                   ? "bg-primary text-white border-primary"
-                  : "bg-white border-gray-300 hover:bg-gray-50"
+                  : "bg-white border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700"
               }`}
               onClick={() => setActiveView("whiteboard")}
             >
@@ -238,7 +259,8 @@ export default function ResearchDashboard() {
                   />
                 </>
               ) : (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <FileText size={48} className="mx-auto mb-4 opacity-50" />
                   No document selected
                 </div>
               )
@@ -248,7 +270,8 @@ export default function ResearchDashboard() {
                   whiteboardId={activeWhiteboardId || undefined}
                 />
               ) : (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <Layout size={48} className="mx-auto mb-4 opacity-50" />
                   No whiteboard selected
                 </div>
               )

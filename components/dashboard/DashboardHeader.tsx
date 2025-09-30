@@ -14,9 +14,9 @@ export default function DashboardHeader({ session, collaborators, onInvite, onEx
     <div className="border-b border-border bg-card px-6 py-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-balance">{session?.topic}</h1>
+          <h1 className="text-xl font-bold text-balance">{session?.title}</h1>
           <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-            <span>Research Session • {new Date(session?.date).toLocaleDateString()}</span>
+            <span>Research Session • {session?._creationTime ? new Date(session._creationTime).toLocaleDateString() : 'Unknown date'}</span>
             <span>Auto-saved • Last sync: {new Date().toLocaleTimeString()}</span>
             <div className="flex items-center gap-2">
               {collaborators

@@ -8,11 +8,15 @@ import { api } from "../_generated/api";
 export const get = query({
   args: { take: v.optional(v.number()) },
   handler: async (ctx, { take }) => {
-    const userId = await authenticatedUser(ctx);
-
-    const all = await ctx.db.query("sessions").collect();
-    const filtered = all.filter(s => s.collaboratorIds?.includes(userId));
-    return filtered.slice(0, take ?? 20);
+    try {
+      const userId = await authenticatedUser(ctx);
+      const all = await ctx.db.query("sessions").collect();
+      const filtered = all.filter((s) => s.collaboratorIds?.includes(userId));
+      return filtered.slice(0, take ?? 20);
+    } catch (error) {
+      // Return empty array for unauthenticated users
+      return [];
+    }
   },
 });
 
@@ -32,7 +36,7 @@ export const getCollaborators = query({
       throw new Error("Session not found");
     }
     return session.collaboratorIds;
-  }
+  },
 });
 
 // MUTATIONS

@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Brain, Sparkles, Zap, Users, Search, ArrowRight, Play, Star } from "lucide-react"
+import { TypewriterEffect } from "@/components/ui/typewriter-effect"
+import { FlipWords } from "@/components/ui/flip-words"
 import dynamic from "next/dynamic"
 
 const Player = dynamic(() => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player), {
@@ -42,7 +44,11 @@ export default function HeroSection() {
             <div className="text-left space-y-8 animate-fade-in-up">
               <div className="space-y-6">
                 <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-                  The fastest and most <span className="text-primary bg-clip-text">powerful</span> research platform
+                  The fastest and most
+                  <span className="text-primary bg-clip-text">
+                    <FlipWords words={["powerful", "Reliable"]} duration={3000} className="text-primary" />
+                  </span>{" "}
+                  research platform
                 </h1>
 
                 <p className="text-xl text-muted-foreground text-pretty max-w-xl leading-relaxed">
@@ -57,18 +63,18 @@ export default function HeroSection() {
                   size="lg"
                   className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold glow-animation"
                 >
-                  Start building
+                  Start your research
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
 
-                <Button
+                {/* <Button
                   variant="outline"
                   size="lg"
                   className="px-8 py-4 text-lg font-semibold border-border hover:bg-accent bg-transparent"
                 >
                   <Play className="mr-2 w-5 h-5" />
                   Watch demo
-                </Button>
+                </Button> */}
               </div>
 
               {/* Social Proof */}

@@ -1,5 +1,5 @@
 "use client"
-import { X, AlertTriangle, Sparkles } from "lucide-react"
+import { X, AlertTriangle, Sparkles, Loader2 } from "lucide-react"
 
 interface ConfirmationModalProps {
   isOpen: boolean
@@ -7,9 +7,10 @@ interface ConfirmationModalProps {
   onConfirm: () => void
   title: string
   message: string
+  isLoading?: boolean
 }
 
-export default function ConfirmationModal({ isOpen, onClose, onConfirm, title, message }: ConfirmationModalProps) {
+export default function ConfirmationModal({ isOpen, onClose, onConfirm, title, message, isLoading = false }: ConfirmationModalProps) {
   if (!isOpen) return null
 
   return (
@@ -54,7 +55,8 @@ export default function ConfirmationModal({ isOpen, onClose, onConfirm, title, m
             <div className="flex justify-end gap-3">
               <button
                 onClick={onClose}
-                className="group relative px-6 py-2.5 bg-secondary/50 hover:bg-secondary/70 text-secondary-foreground rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg border border-border/30"
+                disabled={isLoading}
+                className="group cursor-pointer relative px-6 py-2.5 bg-secondary/50 hover:bg-secondary/70 disabled:opacity-50 disabled:cursor-not-allowed text-secondary-foreground rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg border border-border/30"
               >
                 <span className="relative z-10">Cancel</span>
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-secondary/20 to-secondary/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
@@ -62,9 +64,13 @@ export default function ConfirmationModal({ isOpen, onClose, onConfirm, title, m
 
               <button
                 onClick={onConfirm}
-                className="group relative px-6 py-2.5 bg-gradient-to-r from-destructive to-destructive/90 hover:from-destructive/90 hover:to-destructive text-destructive-foreground rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-destructive/25 border border-destructive/30"
+                disabled={isLoading}
+                className="group cursor-pointer relative px-6 py-2.5 bg-gradient-to-r from-destructive to-destructive/90 hover:from-destructive/90 hover:to-destructive disabled:opacity-50 disabled:cursor-not-allowed text-destructive-foreground rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-destructive/25 border border-destructive/30"
               >
-                <span className="relative z-10 font-medium">Confirm</span>
+                <span className="relative z-10 font-medium flex items-center gap-2">
+                  {isLoading && <Loader2 size={16} className="animate-spin" />}
+                  {isLoading ? "Logging out..." : "Confirm"}
+                </span>
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
               </button>
             </div>

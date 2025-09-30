@@ -33,6 +33,8 @@ export default function ResearchForm({ user }: ResearchFormProps) {
       return
     }
 
+    setLoading(true)
+    setError("")
     try {
       const collaboratorEmails = collaborators.map((c) => c.trim()).filter((c) => c)
       const sessionId = await createResearchSession({
@@ -43,14 +45,14 @@ export default function ResearchForm({ user }: ResearchFormProps) {
           status: "active",
         },
       })
+      // Navigate after session creation
       router.push(`/dashboard/${sessionId}`)
     } catch (err) {
       console.error("Error creating research session:", err)
       setError("Failed to create research session. Please try again.")
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(true)
-    setError("")
   }
 
   return (

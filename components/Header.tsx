@@ -12,6 +12,7 @@ import {
   Zap,
   Menu,
   X,
+  Clock,
 } from "lucide-react";
 import AuthenticationModal from "./auth/AuthenticationModal";
 import ConfirmationModal from "./modals/ConfirmationModal";
@@ -25,6 +26,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const router = useRouter();
 
@@ -42,12 +44,17 @@ export default function Header() {
   console.log(authenticatedUser);
 
   const confirmLogout = async () => {
+    if (isLoggingOut) return; // Prevent multiple clicks
+
+    setIsLoggingOut(true);
     try {
       await authClient.signOut();
       setShowLogoutModal(false);
       router.push("/");
     } catch (error) {
       console.error("Logout failed:", error);
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -105,6 +112,15 @@ export default function Header() {
           >
             {user ? (
               <>
+                <Link
+                  href="/sessions"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-foreground hover:bg-white/10 hover:border-primary/30 transition-all duration-300 group backdrop-blur-sm cursor-pointer"
+                >
+                  <div className="p-1 rounded-lg bg-primary/20 group-hover:bg-primary/30 transition-colors">
+                    <Clock size={16} className="text-primary" />
+                  </div>
+                  <span className="font-medium">Recent Sessions</span>
+                </Link>
                 <Link
                   href="/profile"
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-foreground hover:bg-white/10 hover:border-primary/30 transition-all duration-300 group backdrop-blur-sm cursor-pointer"
@@ -181,6 +197,7 @@ export default function Header() {
         onConfirm={confirmLogout}
         title="Confirm Logout"
         message="Are you sure you want to log out?"
+        isLoading={isLoggingOut}
       />
     </>
   );

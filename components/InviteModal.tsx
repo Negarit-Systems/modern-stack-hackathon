@@ -120,7 +120,7 @@ export default function InviteModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-card border border-border rounded-lg w-full max-w-md">
+      <div className="bg-white dark:bg-slate-800 border border-border rounded-lg w-full max-w-md shadow-xl">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h2 className="text-xl font-semibold">Invite Collaborators</h2>
           <button
@@ -170,9 +170,9 @@ export default function InviteModal({
               </select>
             </div>
 
-            {error && <div className="text-red-600 text-sm mb-2">{error}</div>}
+            {error && <div className="text-destructive text-sm mb-2">{error}</div>}
             {success && (
-              <div className="text-green-600 text-sm mb-2">{success}</div>
+              <div className="text-green-600 dark:text-green-400 text-sm mb-2">{success}</div>
             )}
 
             <button
@@ -245,7 +245,7 @@ export default function InviteModal({
               </ul>
             )}
             {inviteActionError && (
-              <div className="text-red-600 text-xs mt-2">
+              <div className="text-destructive text-xs mt-2">
                 {inviteActionError}
               </div>
             )}
