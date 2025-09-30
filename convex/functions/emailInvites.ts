@@ -37,65 +37,65 @@ const getAuthenticatedUser = async (ctx: any): Promise<User> => {
 };
 
 // Send a single invitation email
-export const sendInvite = mutation({
-  args: {
-    sessionId: v.id("sessions"),
-    email: v.string(),
-    role: v.union(v.literal("editor"), v.literal("viewer")),
-    inviterName: v.string(),
-    sessionTitle: v.string(),
-  },
-  handler: async (
-    ctx: MutationCtx,
-    {
-      sessionId,
-      email,
-      role,
-      inviterName,
-      sessionTitle,
-    }: {
-      sessionId: Id<"sessions">;
-      email: string;
-      role: "editor" | "viewer";
-      inviterName: string;
-      sessionTitle: string;
-    }
-  ): Promise<{
-    inviteId: Id<"invites">;
-    emailResult: Awaited<ReturnType<typeof sendInviteEmail>>;
-  }> => {
-    const user: User = await getAuthenticatedUser(ctx);
-    const inviterId: string = user._id;
-    const inviteId: Id<"invites"> = await ctx.db.insert("invites", {
-      sessionId,
-      email,
-      role,
-      status: "PENDING",
-      invitedBy: inviterId,
-      createdAt: Date.now(),
-    });
-    const emailData: EmailInviteData = {
-      to: email,
-      inviterName,
-      sessionTitle,
-      sessionId,
-      role,
-      inviteId: inviteId.toString(),
-    };
-    const emailResult = await sendInviteEmail(emailData);
-    if (!emailResult.success) {
-      await ctx.db.patch(inviteId, {
-        status: "CANCELLED",
-        updatedAt: Date.now(),
-      });
-      throw new Error(`Failed to send email: ${emailResult.error}`);
-    }
-    return {
-      inviteId,
-      emailResult,
-    };
-  },
-});
+// export const sendInvite = mutation({
+//   args: {
+//     sessionId: v.id("sessions"),
+//     email: v.string(),
+//     role: v.union(v.literal("editor"), v.literal("viewer")),
+//     inviterName: v.string(),
+//     sessionTitle: v.string(),
+//   },
+//   handler: async (
+//     ctx: MutationCtx,
+//     {
+//       sessionId,
+//       email,
+//       role,
+//       inviterName,
+//       sessionTitle,
+//     }: {
+//       sessionId: Id<"sessions">;
+//       email: string;
+//       role: "editor" | "viewer";
+//       inviterName: string;
+//       sessionTitle: string;
+//     }
+//   ): Promise<{
+//     inviteId: Id<"invites">;
+//     emailResult: Awaited<ReturnType<typeof sendInviteEmail>>;
+//   }> => {
+//     const user: User = await getAuthenticatedUser(ctx);
+//     const inviterId: string = user._id;
+//     const inviteId: Id<"invites"> = await ctx.db.insert("invites", {
+//       sessionId,
+//       email,
+//       role,
+//       status: "PENDING",
+//       invitedBy: inviterId,
+//       createdAt: Date.now(),
+//     });
+//     const emailData: EmailInviteData = {
+//       to: email,
+//       inviterName,
+//       sessionTitle,
+//       sessionId,
+//       role,
+//       inviteId: inviteId.toString(),
+//     };
+//     const emailResult = await sendInviteEmail(emailData);
+//     if (!emailResult.success) {
+//       await ctx.db.patch(inviteId, {
+//         status: "CANCELLED",
+//         updatedAt: Date.now(),
+//       });
+//       throw new Error(`Failed to send email: ${emailResult.error}`);
+//     }
+//     return {
+//       inviteId,
+//       emailResult,
+//     };
+//   },
+// });
 
 // Send multiple invitation emails
 export const sendBatchInvites = mutation({
@@ -209,12 +209,78 @@ export const resendInvite = action({
     // optional DB update
     await ctx.runMutation(api.crud.invite.update, {
       id: inviteId,
-      updates: {updatedAt: Date.now()}
+      updates: { updatedAt: Date.now() },
     });
     return { emailResult };
   },
 });
 
+export const sendInvite = action({
+  args: {
+    email: v.string(),
+    sessionId: v.id("sessions"),
+    role: v.union(v.literal("editor"), v.literal("viewer")),
+    inviterName: v.string(),
+    sessionTitle: v.string(),
+  },
+  handler: async (
+    ctx,
+    { email, sessionId, role, inviterName, sessionTitle }
+  ) => {
+    const user = await getAuthenticatedUser(ctx);
+
+    // check if an invite already exists for this email & session
+    const existing = await ctx.runQuery(api.crud.invite.getOneByEmail, {
+      id: sessionId,
+      email: email,
+    });
+
+    if (existing && existing.status === "ACCEPTED") {
+      throw new Error(
+        "This user has already accepted an invite to this session"
+      );
+    }
+
+    let inviteId: Id<"invites">;
+
+    if (existing && existing.status === "PENDING") {
+      // update existing invite
+      inviteId = existing._id;
+      await ctx.runMutation(api.crud.invite.update, {
+        id: inviteId,
+        updates: { updatedAt: Date.now(), status: "PENDING" },
+      });
+    } else {
+      // create new invite
+      inviteId = await ctx.runMutation(api.crud.invite.create, {
+        item: {
+          sessionId,
+          email,
+          role,
+          invitedBy: user._id,
+          status: "PENDING",
+          createdAt: Date.now(),
+        },
+      });
+    }
+
+    // send invite email
+    const emailResult = await sendInviteEmail({
+      to: email,
+      inviterName,
+      sessionTitle,
+      sessionId: sessionId,
+      role,
+      inviteId: inviteId.toString(),
+    });
+
+    if (!emailResult.success) {
+      throw new Error(`Failed to send email: ${emailResult.error}`);
+    }
+
+    return { emailResult, inviteId };
+  },
+});
 
 // Get invites for a session (NO CHANGE NEEDED HERE)
 export const getSessionInvites = query({
@@ -312,10 +378,7 @@ export const cancelInvite = mutation({
       throw new Error("Not authorized to cancel this invite");
     }
 
-    await ctx.db.patch(inviteId, {
-      status: "CANCELLED",
-      updatedAt: Date.now(),
-    });
+    await ctx.db.delete(inviteId);
 
     return { success: true };
   },
