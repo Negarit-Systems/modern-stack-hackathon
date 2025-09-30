@@ -19,6 +19,19 @@ export const getOne = query({
   },
 });
 
+export const getOneByEmail = query({
+  args: { id: v.id("sessions"), email: v.string() },
+  handler: async (ctx, { id, email }) => {
+    const item = await ctx.db
+      .query("invites")
+      .filter((q) =>
+        q.and(q.eq(q.field("sessionId"), id), q.eq(q.field("email"), email))
+      )
+      .first();
+    return item;
+  },
+});
+
 // MUTATIONS
 export const create = mutation({
   args: { item: v.object(inviteSchema) },
