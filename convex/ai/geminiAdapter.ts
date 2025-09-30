@@ -5,10 +5,27 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_EMBEDDING_MODEL = "text-embedding-004";
 
+function getRandomGeminiApiKey(): string {
+  const keys = [
+    process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_1,
+    process.env.GEMINI_API_KEY_2,
+    process.env.GEMINI_API_KEY_3,
+  ].filter((key): key is string => key !== undefined && key !== null);
+
+  if (keys.length === 0) {
+    throw new Error("No GEMINI_API_KEYs found in environment variables");
+  }
+
+  const randomIndex = Math.floor(Math.random() * keys.length);
+  return keys[randomIndex]!;
+}
+
+
 const geminiAdapter: AiProvider = {
   generateText: async (prompt: string, context?: string): Promise<string> => {
     console.log("Gemini API: Generating text...");
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = getRandomGeminiApiKey();
     if (!apiKey) {
       throw new Error("GEMINI_API_KEY not found in environment variables");
     }
@@ -27,7 +44,7 @@ const geminiAdapter: AiProvider = {
 
   generateEmbeddings: async (texts: string[]): Promise<number[][]> => {
     console.log("Gemini API: Generating embeddings for a batch...");
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = getRandomGeminiApiKey();
     if (!apiKey) {
       throw new Error("GEMINI_API_KEY not found in environment variables");
     }
@@ -46,7 +63,6 @@ const geminiAdapter: AiProvider = {
     try {
       const result = await model.batchEmbedContents({ requests });
 
-      // The result contains an array of embedding objects
       // Extract the 'values' array from each embedding object
       return result.embeddings.map(embedding => embedding.values || []);
     } catch (error) {
@@ -57,7 +73,7 @@ const geminiAdapter: AiProvider = {
 
   callFunction: async (prompt: string, functions: any[], context?: string): Promise<any> => {
       console.log("Gemini API: Calling function...");
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = getRandomGeminiApiKey();
       if (!apiKey) {
         throw new Error("GEMINI_API_KEY not found in environment variables");
       }
