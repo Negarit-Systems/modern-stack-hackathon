@@ -133,7 +133,7 @@ export default function ResearchDashboard() {
   };
 
   return session ? (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-blue-950/20">
       <Sidebar
         session={session}
         messages={messages}
@@ -154,8 +154,8 @@ export default function ResearchDashboard() {
         />
 
         {/* Document Editor with Comment System */}
-        <div className="flex-1 p-6 relative">
-          <div className="max-w-4xl mx-auto relative">
+        <div className="flex-1 p-6 relative dark:p-8">
+          <div className="max-w-4xl mx-auto relative dark:max-w-5xl">
             <CommentSystem
               comments={comments}
               collaborators={collaborators!}
@@ -164,11 +164,13 @@ export default function ResearchDashboard() {
               onResolveComment={handleResolveComment}
               onReplyToComment={handleReplyToComment}
             />
-            <RichTextEditor
-              value={document?.content || ""}
-              onChange={handleContentUpdate}
-              placeholder="Begin your research document..."
-            />
+            <div className="dark:bg-gradient-to-br dark:from-slate-900/50 dark:via-slate-800/30 dark:to-blue-900/10 dark:border dark:border-slate-700/50 dark:rounded-2xl dark:p-8 dark:shadow-2xl dark:backdrop-blur-sm">
+              <RichTextEditor
+                value={document?.content || ""}
+                onChange={handleContentUpdate}
+                placeholder="Begin your research document..."
+              />
+            </div>
           </div>
         </div>
       </div>

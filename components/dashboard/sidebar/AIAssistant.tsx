@@ -104,7 +104,7 @@ export default function AIAssistant({ onQuery, session, loading }: AIAssistantPr
             )}
             {chat.response || chat.pending ? (
               <div className="flex justify-start">
-                <div className="bg-gray-200 text-gray-800 rounded-lg p-3 max-w-[80%] break-words shadow-md">
+                <div className="bg-gray-200 text-gray-800 rounded-lg p-3 max-w-[80%] break-words shadow-md dark:bg-primary/20 dark:text-blue-100 dark:border dark:border-blue-500/20 dark:backdrop-blur-sm dark:shadow-lg">
                   {chat.pending ? (
                     <Loader2 className="animate-spin" size={20} />
                   ) : (
@@ -118,7 +118,6 @@ export default function AIAssistant({ onQuery, session, loading }: AIAssistantPr
       </div>
     );
   };
-
   return (
     <div className="bg-background border border-border rounded-lg p-3 flex flex-col gap-3">
       <h3 className="font-semibold flex items-center gap-2 text-sm">

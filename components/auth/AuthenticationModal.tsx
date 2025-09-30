@@ -113,14 +113,14 @@ export default function AuthenticationModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-card border border-border rounded-lg w-full max-w-md">
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-semibold">
+      <div className="bg-card border border-border rounded-lg w-full max-w-md dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-blue-900/20 dark:border-slate-700/50 dark:rounded-2xl dark:shadow-2xl">
+        <div className="flex items-center justify-between p-6 border-b border-border dark:border-slate-700/50">
+          <h2 className="text-xl font-semibold dark:text-white">
             {isSignUp ? "Create Account" : "Sign In"}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-accent rounded-md transition-colors"
+            className="p-2 hover:bg-accent rounded-md transition-colors dark:hover:bg-slate-700/50 dark:text-slate-300 dark:hover:text-white"
           >
             <X size={20} />
           </button>
@@ -129,12 +129,12 @@ export default function AuthenticationModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {isSignUp && (
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium mb-2 dark:text-slate-200">
                 Full Name
               </label>
               <div className="relative">
                 <User
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground dark:text-slate-500"
                   size={18}
                 />
                 <input
@@ -143,7 +143,7 @@ export default function AuthenticationModal({
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full pl-10 pr-4 py-3 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-slate-800/50 dark:border-slate-600/50 dark:text-white dark:placeholder:text-slate-500 dark:focus:ring-blue-500/30 dark:focus:border-blue-500/50"
                   placeholder="Enter your full name"
                   required={isSignUp}
                 />
@@ -152,10 +152,10 @@ export default function AuthenticationModal({
           )}
 
           <div>
-            <label className="block text-sm font-medium mb-2">Email</label>
+            <label className="block text-sm font-medium mb-2 dark:text-slate-200">Email</label>
             <div className="relative">
               <Mail
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground dark:text-slate-500"
                 size={18}
               />
               <input
@@ -164,7 +164,7 @@ export default function AuthenticationModal({
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full pl-10 pr-4 py-3 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-slate-800/50 dark:border-slate-600/50 dark:text-white dark:placeholder:text-slate-500 dark:focus:ring-blue-500/30 dark:focus:border-blue-500/50"
                 placeholder="Enter your email"
                 required
               />
@@ -172,10 +172,10 @@ export default function AuthenticationModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Password</label>
+            <label className="block text-sm font-medium mb-2 dark:text-slate-200">Password</label>
             <div className="relative">
               <Lock
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground dark:text-slate-500"
                 size={18}
               />
               <input
@@ -184,14 +184,14 @@ export default function AuthenticationModal({
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                className="w-full pl-10 pr-12 py-3 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full pl-10 pr-12 py-3 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-slate-800/50 dark:border-slate-600/50 dark:text-white dark:placeholder:text-slate-500 dark:focus:ring-blue-500/30 dark:focus:border-blue-500/50"
                 placeholder="Enter your password"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground dark:text-slate-500 dark:hover:text-white"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -200,12 +200,12 @@ export default function AuthenticationModal({
 
           {isSignUp && (
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium mb-2 dark:text-slate-200">
                 Confirm Password
               </label>
               <div className="relative">
                 <Lock
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground dark:text-slate-500"
                   size={18}
                 />
                 <input
@@ -217,7 +217,7 @@ export default function AuthenticationModal({
                       confirmPassword: e.target.value,
                     })
                   }
-                  className="w-full pl-10 pr-4 py-3 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-slate-800/50 dark:border-slate-600/50 dark:text-white dark:placeholder:text-slate-500 dark:focus:ring-blue-500/30 dark:focus:border-blue-500/50"
                   placeholder="Confirm your password"
                   required={isSignUp}
                 />
@@ -234,7 +234,7 @@ export default function AuthenticationModal({
             <button
               type="button"
               onClick={handleAuthSubmit}
-              className="w-full flex items-center cursor-pointer justify-center gap-2 border border-border py-3 px-6 rounded-md hover:bg-accent transition-colors mb-2"
+              className="w-full flex items-center cursor-pointer justify-center gap-2 border border-border py-3 px-6 rounded-md hover:bg-accent transition-colors mb-2 dark:border-slate-700/50 dark:bg-slate-800/40 dark:hover:bg-slate-700/40 dark:rounded-xl dark:backdrop-blur-sm dark:text-slate-200"
             >
               <span>
                 <Player
@@ -251,7 +251,7 @@ export default function AuthenticationModal({
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-primary-foreground py-3 px-6 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-primary text-primary-foreground py-3 px-6 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-gradient-to-r dark:from-blue-600 dark:to-indigo-600 dark:hover:from-blue-700 dark:hover:to-indigo-700 dark:shadow-lg"
           >
             {loading ? (
               <div className="flex items-center justify-center gap-2">
