@@ -18,11 +18,11 @@ const colors = [
   "bg-pink-500",
   "bg-orange-500",
   "bg-teal-500",
+  "bg-indigo-500",
+  "bg-cyan-500",
 ];
 
 export default function DashboardHeader({ session, collaborators, onInvite, onExport }: DashboardHeaderProps) {
-  console.log("DashboardHeader session:", session);
-  console.log("DashboardHeader collaborators:", collaborators);
   return (
     <div className="border-b border-border bg-card px-6 py-4">
       <div className="flex items-center justify-between">
@@ -38,7 +38,7 @@ export default function DashboardHeader({ session, collaborators, onInvite, onEx
             <div className="flex items-center gap-2">
             {collaborators.map((collab) => {
               const firstChar = collab.name?.[0]?.toUpperCase() || "A";
-              const colorIndex = Math.floor(Math.random() * colors.length);
+              const colorIndex = (firstChar.charCodeAt(0) - 65) % colors.length;
               const circleColor = colors[colorIndex];
 
               return (
