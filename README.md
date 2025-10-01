@@ -241,7 +241,7 @@ If you encounter any issues or have questions:
 
 - **Convex** for the powerful backend-as-a-service platform
 - **Vercel** for hosting and deployment
-- **OpenAI** and **Google** for AI capabilities
+- **OpenAI** for AI capabilities
 - **Firecrawl** for web scraping technology
 - **Resend** for reliable email delivery
 
