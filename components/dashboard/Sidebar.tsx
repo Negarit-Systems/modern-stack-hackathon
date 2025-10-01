@@ -47,7 +47,11 @@ export default function Sidebar({
             onClick={() => setCollapsed(!collapsed)}
             className="p-2 hover:bg-accent rounded-md transition-colors dark:hover:bg-slate-700/50 dark:rounded-lg dark:transition-all dark:duration-200 dark:text-slate-400 dark:hover:text-white"
           >
-            {collapsed ? <ChevronRight size={16} className="dark:size-[18px]" /> : <ChevronLeft size={16} className="dark:size-[18px]" />}
+            {collapsed ? (
+              <ChevronRight size={16} className="dark:size-[18px]" />
+            ) : (
+              <ChevronLeft size={16} className="dark:size-[18px]" />
+            )}
           </button>
         </div>
       </div>
@@ -60,7 +64,7 @@ export default function Sidebar({
             session={session}
             loading={loading}
           />
-          <TeamChat user={user} />
+          <TeamChat />
           <RecentInsights sessionId={session._id} />
         </div>
       )}

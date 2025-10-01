@@ -65,11 +65,6 @@ export function getInviteEmailTemplate(data: EmailTemplateData) {
                 <a href="${sessionUrl}" class="button">${actionText}</a>
               </div>
 
-              <p style="font-size: 14px; color: #718096; margin-top: 30px;">
-                If the button doesn't work, you can copy and paste this link into your browser:<br>
-                <a href="${sessionUrl}" style="word-break: break-all;">${sessionUrl}</a>
-              </p>
-
               <hr style="border: none; border-top: 1px solid #edf2f7; margin: 30px 0;">
 
               <p style="font-size: 14px; color: #718096;">

@@ -7,6 +7,8 @@ import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
 import { X, Mail, UserPlus, Trash2 } from "lucide-react";
+import { authClient } from "@/app/lib/auth.client";
+import { useRouter } from "next/navigation";
 
 interface InviteModalProps {
   isOpen: boolean;
@@ -19,7 +21,7 @@ export default function InviteModal({
   onClose,
   sessionId,
 }: InviteModalProps) {
-  const [emails, setEmails] = useState("");
+  const [email, setEmail] = useState("");
   const [role, setRole] = useState<"editor" | "viewer">("editor");
   // Fetch pending invites from backend
   const pendingInvites =
@@ -27,18 +29,21 @@ export default function InviteModal({
       api.functions.emailInvites.getSessionInvites,
       sessionId ? { sessionId: sessionId as Id<"sessions"> } : "skip"
     ) || [];
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const router = useRouter();
 
-  // Convex mutations
-  const sendBatchInvites = useMutation(
-    api.functions.emailInvites.sendBatchInvites
-  );
-  const resendInvite = useAction(api.functions.emailInvites.resendInvite);
+  const authUser = authClient.useSession();
+
+  if (authUser.error) {
+    router.push("/login");
+  }
+
+  const sendInvite = useAction(api.functions.emailInvites.sendInvite);
   const cancelInvite = useMutation(api.functions.emailInvites.cancelInvite);
 
-  // Track loading/error for individual invite actions
   const [inviteActionLoading, setInviteActionLoading] = useState<string | null>(
     null
   );
@@ -48,48 +53,10 @@ export default function InviteModal({
 
   if (!isOpen) return null;
 
-  const handleSendInvites = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-    if (!emails.trim()) return;
-    setLoading(true);
-    try {
-      const emailList = emails
-        .split(",")
-        .map((email) => email.trim())
-        .filter(Boolean);
-      if (emailList.length === 0) {
-        setError("Please enter at least one valid email address.");
-        setLoading(false);
-        return;
-      }
-      await sendBatchInvites({
-        sessionId: sessionId as Id<"sessions">,
-        invites: emailList.map((email) => ({ email, role })),
-        inviterName: "", // Optionally pass inviterName if available in context
-        sessionTitle: "", // Optionally pass sessionTitle if available in context
-      });
-      setSuccess(
-        `Invites sent to ${emailList.length} collaborator${emailList.length !== 1 ? "s" : ""}!`
-      );
-      setEmails("");
-    } catch (err: any) {
-      // Try to extract a detailed error message from Convex/Resend
-      let msg = err?.message || "Failed to send invites.";
-      // Convex errors may be nested in data.error or data.response?.data?.error
-      if (err?.data?.error) msg = err.data.error;
-      if (err?.response?.data?.error) msg = err.response.data.error;
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Cancel invite
   const handleRemoveInvite = async (inviteId: string) => {
     setInviteActionError(null);
     setInviteActionLoading(inviteId);
+
     try {
       await cancelInvite({ inviteId: inviteId as Id<"invites"> });
     } catch (err: any) {
@@ -99,21 +66,38 @@ export default function InviteModal({
     }
   };
 
-  // Resend invite
-  const handleResendInvite = async (invite: any) => {
-    setInviteActionError(null);
-    setInviteActionLoading(invite._id);
+  const handleSendInvites = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (!email.trim()) return;
+
+    const currentUserEmail = authUser.data?.user?.email;
+    if (email.trim().toLowerCase() === currentUserEmail?.toLowerCase()) {
+      setError("You cannot send an invitation to yourself.");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      await resendInvite({
-        inviteId: invite._id,
-        inviterName: "",
+      await sendInvite({
+        email: email.trim(),
+        sessionId: sessionId as Id<"sessions">,
+        role,
+        inviterName: authUser.data?.user?.name ?? "",
         sessionTitle: "",
       });
+
+      setSuccess(`Invite sent to ${email.trim()}!`);
+      setEmail("");
     } catch (err: any) {
       setInviteActionError(
-        err?.message || `Failed to resend invite to ${invite.email}`
+        err?.message || `Failed to resend invite to ${email}`
       );
     } finally {
+      setLoading(false);
       setInviteActionLoading(null);
     }
   };
@@ -145,15 +129,12 @@ export default function InviteModal({
                 />
                 <input
                   type="text"
-                  value={emails}
-                  onChange={(e) => setEmails(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="Enter emails separated by commas"
                 />
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Separate multiple emails with commas
-              </p>
             </div>
 
             <div>
@@ -170,25 +151,29 @@ export default function InviteModal({
               </select>
             </div>
 
-            {error && <div className="text-destructive text-sm mb-2">{error}</div>}
+            {error && (
+              <div className="text-destructive text-sm mb-2">{error}</div>
+            )}
             {success && (
-              <div className="text-green-600 dark:text-green-400 text-sm mb-2">{success}</div>
+              <div className="text-green-600 dark:text-green-400 text-sm mb-2">
+                {success}
+              </div>
             )}
 
             <button
               type="submit"
-              disabled={loading || !emails.trim()}
+              disabled={loading || !email.trim()}
               className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
-                  Sending Invites...
+                  Sending Invitation...
                 </>
               ) : (
                 <>
                   <UserPlus size={18} />
-                  Send Invites
+                  Send Invitation
                 </>
               )}
             </button>
@@ -215,18 +200,6 @@ export default function InviteModal({
                       </span>
                     </div>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => handleResendInvite(invite)}
-                        className="p-1 hover:bg-accent rounded transition-colors disabled:opacity-50"
-                        title="Resend Invite"
-                        disabled={inviteActionLoading === invite._id}
-                      >
-                        {inviteActionLoading === invite._id ? (
-                          <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
-                        ) : (
-                          <Mail size={16} />
-                        )}
-                      </button>
                       <button
                         onClick={() => handleRemoveInvite(invite._id)}
                         className="p-1 hover:bg-destructive/20 rounded transition-colors disabled:opacity-50"

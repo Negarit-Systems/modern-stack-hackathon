@@ -5,7 +5,6 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useParams } from "next/navigation";
-import Image from "next/image";
 import SafeImage from "./SafeImage";
 
 export interface Collaborator {

@@ -19,7 +19,8 @@ export const getFunctions = query({
         functionDeclarations: [
           {
             name: "get_documents_summary",
-            description: "Returns a summary of a documents in the context provided.",
+            description:
+              "Returns a summary of a documents in the context provided.",
             parameters: {
               type: "OBJECT",
               properties: {
@@ -30,12 +31,20 @@ export const getFunctions = query({
           },
           {
             name: "generate_research_urls",
-            description: "Return URLs for web scraping based on a research topic and document context.",
+            description:
+              "Return URLs for web scraping based on a research topic and document context.",
             parameters: {
               type: "OBJECT",
               properties: {
-                topic: { type: "STRING", description: "The research topic to generate URLs for" },
-                max_urls: { type: "NUMBER", description: "Maximum number of URLs to generate (default: 5)" },
+                topic: {
+                  type: "STRING",
+                  description: "The research topic to generate URLs for",
+                },
+                max_urls: {
+                  type: "NUMBER",
+                  description:
+                    "Maximum number of URLs to generate (default: 5)",
+                },
               },
               required: ["topic"],
             },
@@ -69,8 +78,6 @@ export const generateResearchUrls = action({
       }
     );
 
-    console.log("Search Results in generateResearchUrls:", searchResults);
-
     const contextDocs = await Promise.all(
       searchResults.map(async (result) => {
         const doc = await ctx.runQuery(api.crud.uploadEmbedding.getOne, {
@@ -91,7 +98,7 @@ export const generateResearchUrls = action({
 
     try {
       // Parse the response as JSON
-      console.log(urlResponse)
+      console.log(urlResponse);
       // Remove Markdown code block markers if present
       const cleanedResponse = urlResponse.replace(/```json|```/g, "").trim();
       const urls = JSON.parse(cleanedResponse);

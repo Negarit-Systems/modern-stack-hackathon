@@ -33,7 +33,9 @@ export default function RichTextEditor({
   placeholder,
 }: RichTextEditorProps) {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
+  const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(
+    null
+  );
   const [showResizeControls, setShowResizeControls] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -42,7 +44,12 @@ export default function RichTextEditor({
   const lastValueRef = useRef<string>(value);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTypingRef = useRef(false);
-  const lastCursorPositionRef = useRef<{ offset: number; nodeIndex: number; containerNodeName?: string; containerOffset?: number } | null>(null);
+  const lastCursorPositionRef = useRef<{
+    offset: number;
+    nodeIndex: number;
+    containerNodeName?: string;
+    containerOffset?: number;
+  } | null>(null);
 
   // Enhanced cursor position management with better precision
   const saveCursorPosition = useCallback(() => {
@@ -63,87 +70,99 @@ export default function RichTextEditor({
         nodeIndex: 0,
         // Store additional context for better restoration
         containerNodeName: range.endContainer.nodeName,
-        containerOffset: range.endOffset
+        containerOffset: range.endOffset,
       };
     }
     return null;
   }, []);
 
-  const restoreCursorPosition = useCallback((position: { offset: number; nodeIndex: number; containerNodeName?: string; containerOffset?: number } | null) => {
-    if (!position || !editorRef.current) return;
+  const restoreCursorPosition = useCallback(
+    (
+      position: {
+        offset: number;
+        nodeIndex: number;
+        containerNodeName?: string;
+        containerOffset?: number;
+      } | null
+    ) => {
+      if (!position || !editorRef.current) return;
 
-    try {
-      const selection = window.getSelection();
-      if (!selection) return;
+      try {
+        const selection = window.getSelection();
+        if (!selection) return;
 
-      // More precise restoration using text content matching
-      const targetOffset = position.offset;
-      let currentOffset = 0;
+        // More precise restoration using text content matching
+        const targetOffset = position.offset;
+        let currentOffset = 0;
 
-      // Create a range to traverse the content
-      const range = document.createRange();
-      range.selectNodeContents(editorRef.current);
-
-      // Walk through all text nodes to find the exact position
-      const walker = document.createTreeWalker(
-        editorRef.current,
-        NodeFilter.SHOW_TEXT,
-        null
-      );
-
-      let textNode;
-      while (textNode = walker.nextNode()) {
-        const nodeLength = textNode.textContent?.length || 0;
-
-        if (currentOffset + nodeLength >= targetOffset) {
-          // Found the target text node
-          const offsetInNode = targetOffset - currentOffset;
-          const newRange = document.createRange();
-
-          // Ensure offset doesn't exceed node length
-          const safeOffset = Math.min(offsetInNode, nodeLength);
-          newRange.setStart(textNode, safeOffset);
-          newRange.collapse(true);
-
-          selection.removeAllRanges();
-          selection.addRange(newRange);
-          return;
-        }
-
-        currentOffset += nodeLength;
-      }
-
-      // If we couldn't find the exact position, place cursor at the end
-      const fallbackRange = document.createRange();
-      fallbackRange.selectNodeContents(editorRef.current);
-      fallbackRange.collapse(false);
-      selection.removeAllRanges();
-      selection.addRange(fallbackRange);
-
-    } catch (error) {
-      // Final fallback: place cursor at end
-      const selection = window.getSelection();
-      if (selection && editorRef.current) {
+        // Create a range to traverse the content
         const range = document.createRange();
         range.selectNodeContents(editorRef.current);
-        range.collapse(false);
+
+        // Walk through all text nodes to find the exact position
+        const walker = document.createTreeWalker(
+          editorRef.current,
+          NodeFilter.SHOW_TEXT,
+          null
+        );
+
+        let textNode;
+        while ((textNode = walker.nextNode())) {
+          const nodeLength = textNode.textContent?.length || 0;
+
+          if (currentOffset + nodeLength >= targetOffset) {
+            // Found the target text node
+            const offsetInNode = targetOffset - currentOffset;
+            const newRange = document.createRange();
+
+            // Ensure offset doesn't exceed node length
+            const safeOffset = Math.min(offsetInNode, nodeLength);
+            newRange.setStart(textNode, safeOffset);
+            newRange.collapse(true);
+
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+            return;
+          }
+
+          currentOffset += nodeLength;
+        }
+
+        // If we couldn't find the exact position, place cursor at the end
+        const fallbackRange = document.createRange();
+        fallbackRange.selectNodeContents(editorRef.current);
+        fallbackRange.collapse(false);
         selection.removeAllRanges();
-        selection.addRange(range);
+        selection.addRange(fallbackRange);
+      } catch (error) {
+        // Final fallback: place cursor at end
+        const selection = window.getSelection();
+        if (selection && editorRef.current) {
+          const range = document.createRange();
+          range.selectNodeContents(editorRef.current);
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
       }
-    }
-  }, []);
+    },
+    []
+  );
 
   // Debounced onChange to prevent excessive updates
-  const debouncedOnChange = useCallback((newValue: string) => {
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
+  const debouncedOnChange = useCallback(
+    (newValue: string) => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
 
-    debounceTimeoutRef.current = setTimeout(() => {
-      onChange(newValue);
-      isTypingRef.current = false;
-    }, 300); // 300ms debounce
-  }, [onChange]);
+      debounceTimeoutRef.current = setTimeout(() => {
+        onChange(newValue);
+        isTypingRef.current = false;
+      }, 300); // 300ms debounce
+    },
+    [onChange]
+  );
 
   // Only sync external changes when user is not actively typing
   useEffect(() => {
@@ -183,7 +202,7 @@ export default function RichTextEditor({
   const initializeResizableImages = useCallback(() => {
     if (!editorRef.current) return;
 
-    const images = editorRef.current.querySelectorAll('img');
+    const images = editorRef.current.querySelectorAll("img");
     images.forEach((img) => {
       const resizableImg = img as ResizableImage;
 
@@ -191,12 +210,12 @@ export default function RichTextEditor({
         resizableImg.resizable = true;
 
         // Add resizable styling
-        resizableImg.style.cursor = 'move';
-        resizableImg.style.border = '2px dashed transparent';
-        resizableImg.style.transition = 'border-color 0.2s ease';
+        resizableImg.style.cursor = "move";
+        resizableImg.style.border = "2px dashed transparent";
+        resizableImg.style.transition = "border-color 0.2s ease";
 
         // Add click handler for selection
-        resizableImg.addEventListener('click', handleImageClick);
+        resizableImg.addEventListener("click", handleImageClick);
       }
     });
   }, []);
@@ -209,25 +228,28 @@ export default function RichTextEditor({
     setShowResizeControls(true);
 
     // Add selection styling
-    img.style.border = '2px dashed #3b82f6';
-    img.style.borderRadius = '8px';
+    img.style.border = "2px dashed #3b82f6";
+    img.style.borderRadius = "8px";
   }, []);
 
   // Handle click outside to deselect image
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (resizeControlsRef.current && !resizeControlsRef.current.contains(e.target as Node) &&
-          e.target !== selectedImage) {
+      if (
+        resizeControlsRef.current &&
+        !resizeControlsRef.current.contains(e.target as Node) &&
+        e.target !== selectedImage
+      ) {
         if (selectedImage) {
-          selectedImage.style.border = '2px dashed transparent';
+          selectedImage.style.border = "2px dashed transparent";
         }
         setSelectedImage(null);
         setShowResizeControls(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [selectedImage]);
 
   // Initialize images when component mounts
@@ -252,10 +274,14 @@ export default function RichTextEditor({
   };
 
   // Image compression utility
-  const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<string> => {
+  const compressImage = (
+    file: File,
+    maxWidth: number = 800,
+    quality: number = 0.8
+  ): Promise<string> => {
     return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
       const img = new Image();
 
       img.onload = () => {
@@ -266,7 +292,7 @@ export default function RichTextEditor({
 
         // Draw and compress
         ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        resolve(canvas.toDataURL("image/jpeg", quality));
       };
 
       img.src = URL.createObjectURL(file);
@@ -275,7 +301,6 @@ export default function RichTextEditor({
 
   // Resize image function
   const resizeImage = (width: number, height?: number) => {
-    console.log("Resizing image to:", width, height);
     if (!selectedImage) return;
 
     isUpdatingRef.current = true;
@@ -285,12 +310,12 @@ export default function RichTextEditor({
     if (height) {
       selectedImage.style.height = `${height}px`;
     } else {
-      selectedImage.style.height = 'auto';
+      selectedImage.style.height = "auto";
     }
 
     // Maintain aspect ratio by default
-    selectedImage.style.maxWidth = '100%';
-    selectedImage.style.objectFit = 'contain';
+    selectedImage.style.maxWidth = "100%";
+    selectedImage.style.objectFit = "contain";
 
     // Update content
     if (editorRef.current) {
@@ -308,9 +333,9 @@ export default function RichTextEditor({
 
     isUpdatingRef.current = true;
 
-    selectedImage.style.width = '';
-    selectedImage.style.height = '';
-    selectedImage.style.maxWidth = '100%';
+    selectedImage.style.width = "";
+    selectedImage.style.height = "";
+    selectedImage.style.maxWidth = "100%";
 
     if (editorRef.current) {
       const newValue = editorRef.current.innerHTML;
@@ -323,79 +348,82 @@ export default function RichTextEditor({
 
   // Preset sizes for quick resizing
   const presetSizes = [
-    { label: 'Small', width: 200 },
-    { label: 'Medium', width: 400 },
-    { label: 'Large', width: 600 },
-    { label: 'Original', action: resetImageSize },
+    { label: "Small", width: 200 },
+    { label: "Medium", width: 400 },
+    { label: "Large", width: 600 },
+    { label: "Original", action: resetImageSize },
   ];
 
-  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editorRef.current) return;
+  const handleImageUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file || !editorRef.current) return;
 
-    setIsUploadingImage(true);
+      setIsUploadingImage(true);
 
-    try {
-      // Save cursor position before insertion
-      const cursorPosition = saveCursorPosition();
+      try {
+        // Save cursor position before insertion
+        const cursorPosition = saveCursorPosition();
 
-      // Compress image to reduce lag
-      const compressedDataUrl = await compressImage(file, 800, 0.7);
+        // Compress image to reduce lag
+        const compressedDataUrl = await compressImage(file, 800, 0.7);
 
-      // Create image element with resizable properties
-      const img = document.createElement('img') as ResizableImage;
-      img.src = compressedDataUrl;
-      img.alt = 'Uploaded image';
-      img.style.cssText = 'max-width: 100%; height: auto; margin: 10px 0; border-radius: 8px; display: block; cursor: move; border: 2px dashed transparent; transition: border-color 0.2s ease;';
-      img.resizable = true;
+        // Create image element with resizable properties
+        const img = document.createElement("img") as ResizableImage;
+        img.src = compressedDataUrl;
+        img.alt = "Uploaded image";
+        img.style.cssText =
+          "max-width: 100%; height: auto; margin: 10px 0; border-radius: 8px; display: block; cursor: move; border: 2px dashed transparent; transition: border-color 0.2s ease;";
+        img.resizable = true;
 
-      // Add click handler
-      img.addEventListener('click', handleImageClick);
+        // Add click handler
+        img.addEventListener("click", handleImageClick);
 
-      // Insert image at cursor position
-      isUpdatingRef.current = true;
+        // Insert image at cursor position
+        isUpdatingRef.current = true;
 
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        range.deleteContents();
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
 
-        // Insert image and add a line break after it
-        range.insertNode(img);
-        range.collapse(false);
+          // Insert image and add a line break after it
+          range.insertNode(img);
+          range.collapse(false);
 
-        // Add a paragraph after the image for continued typing
-        const br = document.createElement('br');
-        range.insertNode(br);
-        range.setStartAfter(br);
-        range.collapse(true);
+          // Add a paragraph after the image for continued typing
+          const br = document.createElement("br");
+          range.insertNode(br);
+          range.setStartAfter(br);
+          range.collapse(true);
 
-        selection.removeAllRanges();
-        selection.addRange(range);
-      } else {
-        // Fallback: append to end
-        editorRef.current.appendChild(img);
-        editorRef.current.appendChild(document.createElement('br'));
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } else {
+          // Fallback: append to end
+          editorRef.current.appendChild(img);
+          editorRef.current.appendChild(document.createElement("br"));
+        }
+
+        // Update content with debouncing
+        const newValue = editorRef.current.innerHTML;
+        lastValueRef.current = newValue;
+        isTypingRef.current = true;
+        debouncedOnChange(newValue);
+
+        isUpdatingRef.current = false;
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        isUpdatingRef.current = false;
+      } finally {
+        setIsUploadingImage(false);
       }
 
-      // Update content with debouncing
-      const newValue = editorRef.current.innerHTML;
-      lastValueRef.current = newValue;
-      isTypingRef.current = true;
-      debouncedOnChange(newValue);
-
-      isUpdatingRef.current = false;
-
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      isUpdatingRef.current = false;
-    } finally {
-      setIsUploadingImage(false);
-    }
-
-    // Clear the input
-    e.target.value = '';
-  }, [saveCursorPosition, debouncedOnChange, handleImageClick]);
+      // Clear the input
+      e.target.value = "";
+    },
+    [saveCursorPosition, debouncedOnChange, handleImageClick]
+  );
 
   const handleContentChange = useCallback(() => {
     if (editorRef.current && !isUpdatingRef.current) {
@@ -419,14 +447,20 @@ export default function RichTextEditor({
   }, [debouncedOnChange, saveCursorPosition, initializeResizableImages]);
 
   // Handle input events with better cursor management
-  const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
-    handleContentChange();
-  }, [handleContentChange]);
+  const handleInput = useCallback(
+    (e: React.FormEvent<HTMLDivElement>) => {
+      handleContentChange();
+    },
+    [handleContentChange]
+  );
 
   // Handle key events to track typing state
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-    isTypingRef.current = true;
-  }, []);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      isTypingRef.current = true;
+    },
+    []
+  );
 
   // Handle focus events
   const handleFocus = useCallback(() => {
@@ -438,7 +472,10 @@ export default function RichTextEditor({
   }, [restoreCursorPosition]);
 
   return (
-    <div className="border border-gray-300 dark:border-slate-600 rounded-lg overflow-hidden bg-white dark:bg-slate-800" style={{ minHeight: "850px" }}>
+    <div
+      className="border border-gray-300 dark:border-slate-600 rounded-lg overflow-hidden bg-white dark:bg-slate-800"
+      style={{ minHeight: "850px" }}
+    >
       {/* Toolbar */}
       <div className="border-b border-gray-300 dark:border-slate-600 p-3 bg-gray-50 dark:bg-slate-700">
         <div className="flex flex-wrap items-center gap-1">
@@ -522,7 +559,7 @@ export default function RichTextEditor({
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploadingImage}
-              className={`p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md ${isUploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`p-2 hover:bg-gray-100 dark:hover:bg-slate-500 rounded-md ${isUploadingImage ? "opacity-50 cursor-not-allowed" : ""}`}
               title={isUploadingImage ? "Uploading..." : "Insert Image"}
             >
               {isUploadingImage ? (
@@ -562,7 +599,9 @@ export default function RichTextEditor({
               {presetSizes.map((preset) => (
                 <button
                   key={preset.label}
-                  onClick={() => preset.action ? preset.action() : resizeImage(preset.width!)}
+                  onClick={() =>
+                    preset.action ? preset.action() : resizeImage(preset.width!)
+                  }
                   className="px-2 py-1 text-xs border border-blue-300 rounded hover:bg-blue-100 text-blue-700"
                 >
                   {preset.label}
@@ -574,7 +613,7 @@ export default function RichTextEditor({
             <button
               onClick={() => {
                 if (selectedImage) {
-                  selectedImage.style.border = '2px dashed transparent';
+                  selectedImage.style.border = "2px dashed transparent";
                 }
                 setSelectedImage(null);
                 setShowResizeControls(false);
@@ -594,7 +633,9 @@ export default function RichTextEditor({
         onInput={handleInput}
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
-        onBlur={() => { isTypingRef.current = false; }}
+        onBlur={() => {
+          isTypingRef.current = false;
+        }}
         className="min-h-[500px] p-6 focus:outline-none prose prose-sm max-w-none"
         style={{
           lineHeight: "1.6",
