@@ -49,6 +49,21 @@ export default function ResearchDashboard() {
   const updateComment = useMutation(api.crud.comment.update);
   const deleteComment = useMutation(api.crud.comment.deleteOne);
 
+  // notification
+  const createCommentNotification = useMutation(
+    api.crud.notification.commentNotificationCreate
+  );
+  const createReplyNotification = useMutation(
+    api.crud.notification.replyNotificationCreate
+  );
+  const updateNotification = useMutation(
+    api.crud.notification.update
+  )
+  const notifications = useQuery(
+    api.crud.notification.getBySessionAndUser,
+    user ? { sessionId, userId: user.id } : "skip"
+  );
+
   // collaborators
   const collaboratorResults = useQuery(api.crud.users.getCollaboratorUsers, {
     sessionId,
@@ -229,6 +244,8 @@ export default function ResearchDashboard() {
           collaborators={collaboratorUsers}
           onInvite={() => setShowInviteModal(true)}
           onExport={handleExport}
+          notifications={notifications ?? []}
+          onNotificationRead={updateNotification}
         />
 
         {/* View Toggle and Switchers */}
@@ -287,12 +304,16 @@ export default function ResearchDashboard() {
                     placeholder="Begin your research document..."
                   />
                   <CommentSystem
+                    sessionId={sessionId}
+                    user={user}
                     comments={comments}
                     onAddComment={handleAddComment}
                     onResolveComment={handleResolveComment}
                     onReply={handleReplyToComment}
                     deleteComment={handleDeleteComment}
                     collaboratorUsers={collaboratorUsers}
+                    onMentionNotification={createCommentNotification}
+                    onReplyNotification={createReplyNotification}
                   />
                 </div>
               ) : (

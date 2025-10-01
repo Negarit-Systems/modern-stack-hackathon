@@ -1,12 +1,16 @@
 "use client";
 
-import { UserPlus, Download } from "lucide-react";
+import { Id } from "@/convex/_generated/dataModel";
+import { UserPlus, Download, Bell, Check } from "lucide-react";
+import { useState } from "react";
 
 interface DashboardHeaderProps {
   session: any;
   collaborators: any[];
   onInvite: () => void;
   onExport: () => void;
+  notifications: any[];
+  onNotificationRead: (args: {id: Id<"notifications">; updates: any}) => void;
 }
 
 const colors = [
@@ -22,7 +26,33 @@ const colors = [
   "bg-cyan-500",
 ];
 
-export default function DashboardHeader({ session, collaborators, onInvite, onExport }: DashboardHeaderProps) {
+export default function DashboardHeader({
+  session,
+  collaborators,
+  onInvite,
+  onExport,
+  notifications,
+  onNotificationRead
+}: DashboardHeaderProps) {
+  const [showNotifications, setShowNotifications] = useState(false);
+  const unreadCount = notifications.filter(notification => !notification.read).length;
+
+  const handleNotificationClick = () => {
+    setShowNotifications(!showNotifications);
+  };
+
+  const handleMarkAsRead = (notificationId: Id<"notifications">) => {
+    onNotificationRead({
+      id: notificationId,
+      updates: { read: true }
+    });
+  };
+
+  const handleMarkAllAsRead = () => {
+    // You'll need to implement this function to mark all notifications as read
+    console.log("Mark all as read");
+  };
+
   return (
     <div className="border-b border-border bg-card px-6 py-4">
       <div className="flex items-center justify-between">
@@ -35,30 +65,127 @@ export default function DashboardHeader({ session, collaborators, onInvite, onEx
         </div>
 
         <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
+          {/* Collaborators */}
+          <div className="flex items-center gap-2">
             {collaborators.map((collab) => {
               const firstChar = collab.name?.[0]?.toUpperCase() || "A";
               const colorIndex = (firstChar.charCodeAt(0) - 65) % colors.length;
               const circleColor = colors[colorIndex];
 
               return (
-              <div
-                key={collab._id}
-                className="relative flex items-center gap-1 group"
-              >
                 <div
-                className={`w-7 h-7 flex items-center justify-center rounded-full text-white font-bold text-sm ${circleColor} cursor-pointer`}
+                  key={collab._id}
+                  className="relative flex items-center gap-1 group"
                 >
-                {firstChar}
+                  <div
+                    className={`w-7 h-7 flex items-center justify-center rounded-full text-white font-bold text-sm ${circleColor} cursor-pointer`}
+                  >
+                    {firstChar}
+                  </div>
+                  <div className="absolute left-0 top-8 z-10 hidden group-hover:flex flex-col bg-card border border-border rounded-md px-3 py-2 shadow-lg min-w-max">
+                    <span className="font-semibold">{collab.name}</span>
+                    <span className="text-muted-foreground text-xs">{collab.email}</span>
+                  </div>
                 </div>
-                <div className="absolute left-0 top-8 z-10 hidden group-hover:flex flex-col bg-card border border-border rounded-md px-3 py-2 shadow-lg min-w-max">
-                <span className="font-semibold">{collab.name}</span>
-                <span className="text-muted-foreground text-xs">{collab.email}</span>
-                </div>
-              </div>
               );
             })}
-            </div>
+          </div>
+
+                    {/* Notifications */}
+          <div className="relative">
+            <button
+              onClick={handleNotificationClick}
+              className="relative p-2 hover:bg-accent rounded-md transition-colors"
+            >
+              <Bell size={20} className="text-muted-foreground" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notifications Dropdown */}
+            {showNotifications && (
+              <div className="absolute right-0 top-12 z-50 w-80 bg-card border border-border rounded-lg shadow-lg">
+                <div className="p-4 border-b border-border">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">Notifications</h3>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={handleMarkAllAsRead}
+                        className="text-xs text-primary hover:text-primary/60 flex items-center gap-1"
+                      >
+                        <Check size={14} />
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="max-h-64 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground">
+                      No notifications
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {notifications.map((notification) => (
+                        <div
+                          key={notification._id}
+                          className={`p-3 hover:bg-accent/50 transition-colors cursor-pointer ${
+                            !notification.read ? 'bg-blue-50 dark:bg-blue-950/20' : ''
+                          }`}
+                          onClick={() => handleMarkAsRead(notification._id)}
+                        >
+                          <div className="flex items-start gap-2">
+                            <div className={`w-2 h-2 rounded-full mt-2 ${
+                              !notification.read ? 'bg-blue-500' : 'bg-transparent'
+                            }`} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-small mb-1">
+                                {notification.message}
+                              </p>
+                                {notification.details && (
+                                <p className="text-xs text-muted-foreground mb-1">
+                                  {notification.details.length > 30
+                                  ? notification.details.slice(0, 30) + "..."
+                                  : notification.details}
+                                </p>
+                                )}
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-muted-foreground capitalize">
+                                  {notification.type.replace(/_/g, ' ')}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(notification._creationTime).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                            {!notification.read && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMarkAsRead(notification._id);
+                                }}
+                                className="p-1 hover:bg-accent rounded transition-colors"
+                                title="Mark as read"
+                              >
+                                <Check size={14} className="text-muted-foreground" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+
+          {/* Action Buttons */}
           <button
             onClick={onInvite}
             className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors text-sm"
@@ -75,6 +202,14 @@ export default function DashboardHeader({ session, collaborators, onInvite, onEx
           </button>
         </div>
       </div>
+
+      {/* Click outside to close notifications */}
+      {showNotifications && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowNotifications(false)}
+        />
+      )}
     </div>
   );
 }
