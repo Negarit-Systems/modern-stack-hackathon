@@ -48,6 +48,12 @@ export default function ResearchDashboard() {
   const createComment = useMutation(api.crud.comment.create);
   const updateComment = useMutation(api.crud.comment.update);
   const deleteComment = useMutation(api.crud.comment.deleteOne);
+  const comments =
+    useQuery(
+      api.crud.comment.getByDocumentId,
+      activeDocumentId ? { documentId: activeDocumentId } : "skip"
+    ) || [];
+
 
   // notification
   const createCommentNotification = useMutation(
@@ -58,6 +64,9 @@ export default function ResearchDashboard() {
   );
   const updateNotification = useMutation(
     api.crud.notification.update
+  )
+  const bulkUpdateNotification = useMutation(
+    api.crud.notification.bulkUpdate
   )
   const notifications = useQuery(
     api.crud.notification.getBySessionAndUser,
@@ -86,13 +95,6 @@ export default function ResearchDashboard() {
     (wb) => wb._id === activeWhiteboardId
   );
   const updateDocument = useMutation(api.crud.document.update);
-
-  // Get comments for active document
-  const comments =
-    useQuery(
-      api.crud.comment.getByDocumentId,
-      activeDocumentId ? { documentId: activeDocumentId } : "skip"
-    ) || [];
 
   // Actions
   const handleChatbotQueryRaw = useAction(api.functions.ai.handleUserQuery);
@@ -246,6 +248,7 @@ export default function ResearchDashboard() {
           onExport={handleExport}
           notifications={notifications ?? []}
           onNotificationRead={updateNotification}
+          onNotificationReadAll={bulkUpdateNotification}
         />
 
         {/* View Toggle and Switchers */}

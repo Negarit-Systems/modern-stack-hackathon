@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { makePartial } from "../utils/utils";
 import { commentSchema } from "../schemas";
+import { api } from "../_generated/api";
 
 // QUERIES
 export const get = query({
@@ -14,12 +15,18 @@ export const get = query({
 export const getByDocumentId = query({
   args: { documentId: v.id("documents") },
   handler: async (ctx, { documentId }) => {
-    const item = await ctx.db
+    const items = await ctx.db
       .query("comments")
       .withIndex("by_documentId", (q) => q.eq("documentId", documentId))
       .order("asc")
       .collect();
-    return item;
+
+    const results: any = [];
+    for (const comment of items) {
+      const user = await ctx.runQuery(api.crud.users.getUserById, { id: comment.userId });
+      results.push({ ...comment, userName: user.users.name });
+    }
+    return results;
   },
 });
 

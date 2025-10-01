@@ -11,6 +11,7 @@ interface DashboardHeaderProps {
   onExport: () => void;
   notifications: any[];
   onNotificationRead: (args: {id: Id<"notifications">; updates: any}) => void;
+  onNotificationReadAll: (args: {ids: Id<"notifications">[]; updates: any}) => void;
 }
 
 const colors = [
@@ -32,7 +33,8 @@ export default function DashboardHeader({
   onInvite,
   onExport,
   notifications,
-  onNotificationRead
+  onNotificationRead,
+  onNotificationReadAll
 }: DashboardHeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const unreadCount = notifications.filter(notification => !notification.read).length;
@@ -49,8 +51,11 @@ export default function DashboardHeader({
   };
 
   const handleMarkAllAsRead = () => {
-    // You'll need to implement this function to mark all notifications as read
-    console.log("Mark all as read");
+    onNotificationReadAll({
+      ids: notifications.filter(n => !n.read).map(n => n._id),
+      updates: { read: true }
+    });
+    setShowNotifications(false);
   };
 
   return (

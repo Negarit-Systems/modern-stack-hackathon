@@ -28,6 +28,7 @@ export const getBySessionAndUser = query({
       .withIndex("by_session_and_user", (q: any) =>
         q.eq("sessionId", sessionId).eq("userId", userId)
       )
+      .order("desc")
       .collect();
     return items;
   },
@@ -88,6 +89,18 @@ export const update = mutation({
   },
   handler: async (ctx, { id, updates }) => {
     await ctx.db.patch(id, updates);
+  },
+});
+
+export const bulkUpdate = mutation({
+  args: {
+    ids: v.array(v.id("notifications")),
+    updates: v.object(makePartial(notificationSchema)),
+  },
+  handler: async (ctx, { ids, updates }) => {
+    for (const id of ids) {
+      await ctx.db.patch(id, updates);
+    }
   },
 });
 

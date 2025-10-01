@@ -534,9 +534,9 @@ export default function CommentSystem({
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
-                        {user?.name.charAt(0) || 'U'}
+                        {comment?.userName.charAt(0) || 'U'}
                       </div>
-                      <p className="font-medium text-sm text-gray-900 dark:text-gray-100">{user?.name || "Unknown User"}</p>
+                      <p className="font-medium text-sm text-gray-900 dark:text-gray-100">{comment?.userName || "Unknown User"}</p>
                     </div>
                     <div className="flex gap-1">
                       {!comment.resolved && (
@@ -591,9 +591,9 @@ export default function CommentSystem({
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <div className="w-4 h-4 bg-gray-400 dark:bg-gray-500 text-white rounded-full flex items-center justify-center text-xs">
-                                  {user.name?.charAt(0) || 'U'}
+                                  {reply?.userName.charAt(0) || 'U'}
                                 </div>
-                                <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{user.name || "Unknown User"}</p>
+                                <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{reply?.userName || "Unknown User"}</p>
                               </div>
                               <button
                                 onClick={() => handleDelete(reply._id)}
