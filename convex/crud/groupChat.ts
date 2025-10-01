@@ -43,3 +43,21 @@ export const getMessages = query({
       .paginate(args.paginationOpts);
   },
 });
+
+export const deleteMessage = mutation({
+  args: { id: v.id("groupChats") },
+  handler: async (ctx, { id }) => {
+    const authUser = await authComponent.getAuthUser(ctx);
+    if (!authUser) {
+      throw new Error("Not authenticated");
+    }
+
+    //check the user owns the message
+    const message = await ctx.db.get(id);
+    if (!message || message.senderId !== authUser._id) {
+      throw new Error("Not authorized to delete this message");
+    }
+
+    await ctx.db.delete(id);
+  },
+});
