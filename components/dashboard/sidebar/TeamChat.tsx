@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, Send, AtSign, Trash2 } from "lucide-react";
+import { MessageCircle, Send, AtSign, Trash2, ChevronRight, ChevronDown } from "lucide-react";
 import { useAction, useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -13,6 +13,7 @@ interface TeamChatProps {
 }
 
 export default function TeamChat() {
+  const [collapsed, setCollapsed] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [showMentions, setShowMentions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState("");
@@ -189,180 +190,194 @@ export default function TeamChat() {
     : [];
 
   return (
-    <div className="bg-background border border-border rounded-lg p-3 flex flex-col h-[400px] overflow-hidden">
-      <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm">
-        <MessageCircle size={16} className="text-primary" />
-        Team Chat
-        {isLoadingMore && (
-          <span className="text-xs text-muted-foreground">Loading...</span>
-        )}
-      </h3>
-
-      <div
-        ref={messagesContainerRef}
-        className="flex-1 space-y-3 mb-3 overflow-y-auto min-h-0"
+    <div className="bg-background border border-border rounded-lg flex flex-col">
+       <div
+        className="flex items-center justify-between px-3 py-2 cursor-pointer select-none border-b border-border"
+        onClick={() => setCollapsed(!collapsed)}
       >
-        {sortedMessages?.length === 0 && (
-          <p className="text-xs text-muted-foreground">No messages yet.</p>
+        <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm">
+          <MessageCircle size={16} className="text-primary" />
+          Team Chat
+          {isLoadingMore && (
+            <span className="text-xs text-muted-foreground">Loading...</span>
+          )}
+        </h3>
+        {collapsed ? (
+          <ChevronRight size={16} className="text-muted-foreground" />
+        ) : (
+          <ChevronDown size={16} className="text-muted-foreground" />
         )}
+      </div>
 
-        {sortedMessages?.map((message: any) => {
-          const isSender = message.senderId === user.data?.user.id;
-          const canDelete = isSender; // Only allow users to delete their own messages
+      {!collapsed && (
+        <div className="p-3 flex flex-col gap-3 h-[400px] ">
+          <div
+            ref={messagesContainerRef}
+            className="flex-1 space-y-3 mb-3 overflow-y-auto min-h-0"
+          >
+            {sortedMessages?.length === 0 && (
+              <p className="text-xs text-muted-foreground">No messages yet.</p>
+            )}
 
-          return (
-            <div
-              key={message._id}
-              className={`flex ${isSender ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`relative max-w-[80%] text-xs rounded-lg group ${
-                  isSender
-                    ? "bg-blue-500 text-white rounded-br-none"
-                    : "bg-gray-200 text-gray-800 rounded-bl-none"
-                }`}
-              >
-                {/* Directional arrow */}
-                {isSender ? (
-                  <div className="absolute -right-1 top-0 w-3 h-3">
-                    <div className="w-3 h-3 bg-blue-500 transform rotate-45 origin-bottom-left"></div>
-                  </div>
-                ) : (
-                  <div className="absolute -left-1 top-0 w-3 h-3">
-                    <div className="w-3 h-3 bg-gray-200 transform rotate-45 origin-bottom-right"></div>
-                  </div>
-                )}
+            {sortedMessages?.map((message: any) => {
+              const isSender = message.senderId === user.data?.user.id;
+              const canDelete = isSender; // Only allow users to delete their own messages
 
-                <div className="p-2">
-                  <div className="flex items-center gap-1 mb-1 justify-between">
-                    <div className="flex items-center gap-1">
-                      <span
-                        className={`font-medium ${
-                          isSender ? "text-blue-100" : "text-gray-600"
-                        }`}
-                      >
-                        {isSender
-                          ? "You"
-                          : (message.senderName?.split(" ")[0] ?? "Unknown")}
-                      </span>
-                      <span
-                        className={`text-xs ${
-                          isSender ? "text-blue-200" : "text-gray-500"
-                        }`}
-                      >
-                        {new Date(message._creationTime).toLocaleTimeString(
-                          [],
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }
-                        )}
-                      </span>
-                    </div>
-
-                    {canDelete && (
-                      <button
-                        onClick={() => handleDeleteMessage(message._id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/20 rounded"
-                        title="Delete message"
-                      >
-                        <Trash2 size={10} />
-                      </button>
+              return (
+                <div
+                  key={message._id}
+                  className={`flex ${isSender ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`relative max-w-[80%] text-xs rounded-lg group ${
+                      isSender
+                        ? "bg-blue-500 text-white rounded-br-none"
+                        : "bg-gray-200 text-gray-800 rounded-bl-none"
+                    }`}
+                  >
+                    {/* Directional arrow */}
+                    {isSender ? (
+                      <div className="absolute -right-1 top-0 w-3 h-3">
+                        <div className="w-3 h-3 bg-blue-500 transform rotate-45 origin-bottom-left"></div>
+                      </div>
+                    ) : (
+                      <div className="absolute -left-1 top-0 w-3 h-3">
+                        <div className="w-3 h-3 bg-gray-200 transform rotate-45 origin-bottom-right"></div>
+                      </div>
                     )}
-                  </div>
-                  <p className="relative z-10 break-words whitespace-pre-wrap">
-                    {message.content
-                      .split(/(@[^\s]+)/g) // Improved regex to match any non-space characters after @
-                      .map((part: string, index: number) =>
-                        part.startsWith("@") ? (
+
+                    <div className="p-2">
+                      <div className="flex items-center gap-1 mb-1 justify-between">
+                        <div className="flex items-center gap-1">
                           <span
-                            key={index}
                             className={`font-medium ${
-                              isSender ? "text-blue-100" : "text-blue-600"
+                              isSender ? "text-blue-100" : "text-gray-600"
                             }`}
                           >
-                            {part}
+                            {isSender
+                              ? "You"
+                              : (message.senderName?.split(" ")[0] ?? "Unknown")}
                           </span>
-                        ) : (
-                          part
-                        )
-                      )}
+                          <span
+                            className={`text-xs ${
+                              isSender ? "text-blue-200" : "text-gray-500"
+                            }`}
+                          >
+                            {new Date(message._creationTime).toLocaleTimeString(
+                              [],
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </span>
+                        </div>
+
+                        {canDelete && (
+                          <button
+                            onClick={() => handleDeleteMessage(message._id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/20 rounded"
+                            title="Delete message"
+                          >
+                            <Trash2 size={10} />
+                          </button>
+                        )}
+                      </div>
+                      <p className="relative z-10 break-words whitespace-pre-wrap">
+                        {message.content
+                          .split(/(@[^\s]+)/g) // Improved regex to match any non-space characters after @
+                          .map((part: string, index: number) =>
+                            part.startsWith("@") ? (
+                              <span
+                                key={index}
+                                className={`font-medium ${
+                                  isSender ? "text-blue-100" : "text-blue-600"
+                                }`}
+                              >
+                                {part}
+                              </span>
+                            ) : (
+                              part
+                            )
+                          )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="relative">
+            <form onSubmit={handleSubmit}>
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={handleInputChange}
+                    className="w-full px-2 py-1 text-sm border border-border rounded-md bg-background focus:ring-1 focus:ring-primary focus:border-transparent"
+                    placeholder="Type message... Use @ to mention"
+                  />
+                  {showMentions && (
+                    <AtSign
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary"
+                      size={12}
+                    />
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  className="px-2 py-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                >
+                  <Send size={14} />
+                </button>
+              </div>
+            </form>
+
+            {/* Mentions dropdown */}
+            {showMentions && collaborators.length > 0 && (
+              <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-md shadow-lg z-10 max-h-32 overflow-y-auto">
+                <div className="p-2">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Mention someone
+                  </p>
+                    {/* Option to tag AI bot */}
+                    <button
+                      onClick={() => insertMention("bot", "AI Bot")}
+                      className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded-sm transition-colors flex items-center gap-2"
+                      >
+                    </button>
+                    {collaborators.map((collab: any) => (
+                    <button
+                      key={collab._id}
+                      onClick={() => insertMention(collab.email, collab.name)}
+                      className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded-sm transition-colors flex items-center gap-2"
+                    >
+                      <span className="font-medium">@{collab.email}</span>
+                      <span className="text-muted-foreground text-xs">
+                      ({collab.name})
+                      </span>
+                    </button>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* No results state */}
+            {showMentions && mentionQuery && collaborators.length === 0 && (
+              <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-md shadow-lg z-10">
+                <div className="p-2">
+                  <p className="text-xs text-muted-foreground">
+                    No collaborators found for "{mentionQuery}"
                   </p>
                 </div>
               </div>
-            </div>
-          );
-        })}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <div className="relative">
-        <form onSubmit={handleSubmit}>
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={handleInputChange}
-                className="w-full px-2 py-1 text-sm border border-border rounded-md bg-background focus:ring-1 focus:ring-primary focus:border-transparent"
-                placeholder="Type message... Use @ to mention"
-              />
-              {showMentions && (
-                <AtSign
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary"
-                  size={12}
-                />
-              )}
-            </div>
-            <button
-              type="submit"
-              className="px-2 py-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-            >
-              <Send size={14} />
-            </button>
+            )}
           </div>
-        </form>
-
-        {/* Mentions dropdown */}
-        {showMentions && collaborators.length > 0 && (
-          <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-md shadow-lg z-10 max-h-32 overflow-y-auto">
-            <div className="p-2">
-              <p className="text-xs text-muted-foreground mb-2">
-                Mention someone
-              </p>
-                {/* Option to tag AI bot */}
-                <button
-                  onClick={() => insertMention("bot", "AI Bot")}
-                  className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded-sm transition-colors flex items-center gap-2"
-                  >
-                </button>
-                {collaborators.map((collab: any) => (
-                <button
-                  key={collab._id}
-                  onClick={() => insertMention(collab.email, collab.name)}
-                  className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded-sm transition-colors flex items-center gap-2"
-                >
-                  <span className="font-medium">@{collab.email}</span>
-                  <span className="text-muted-foreground text-xs">
-                  ({collab.name})
-                  </span>
-                </button>
-                ))}
-            </div>
-          </div>
-        )}
-
-        {/* No results state */}
-        {showMentions && mentionQuery && collaborators.length === 0 && (
-          <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-md shadow-lg z-10">
-            <div className="p-2">
-              <p className="text-xs text-muted-foreground">
-                No collaborators found for "{mentionQuery}"
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

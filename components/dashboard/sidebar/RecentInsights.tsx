@@ -10,7 +10,9 @@ import {
   AlertCircle,
   Loader2,
   Trash2,
-  Play
+  Play,
+  ChevronRight,
+  ChevronDown
 } from "lucide-react";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -34,6 +36,7 @@ interface UploadingFile {
 }
 
 export default function RecentInsights({ onFileSelected, sessionId }: UploadProps) {
+  const [collapsed, setCollapsed] = useState(false);
   const generateUploadUrl = useMutation(api.crud.upload.generateUploadUrl);
   const createUpload = useMutation(api.crud.upload.create);
   const deleteUpload = useMutation(api.crud.upload.deleteOne);
@@ -215,19 +218,33 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
 
   return (
     <div className="bg-background border border-border rounded-lg p-4 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-blue-900/20 dark:border-slate-700/50 dark:rounded-xl dark:p-6 dark:shadow-xl dark:hover:shadow-2xl dark:hover:shadow-blue-500/10 dark:transition-all dark:duration-300">
-      <div className="flex items-center justify-between mb-4 dark:mb-6">
-        <h3 className="font-semibold flex items-center gap-2 text-sm dark:gap-3 dark:text-lg">
-          <div className="dark:p-2 dark:bg-gradient-to-br dark:from-blue-600 dark:to-indigo-700 dark:rounded-lg dark:shadow-lg">
-            <FileText size={16} className="text-primary dark:text-white" />
-          </div>
-          <span className="dark:text-white">Document Library</span>
-        </h3>
-        {totalFiles > 0 && (
-          <span className="text-xs text-muted-foreground dark:text-slate-300 dark:bg-slate-700/50 dark:px-2 dark:py-1 dark:rounded-full">
-            {completedFiles}/{totalFiles} ready
-          </span>
+      <div
+        className="flex items-center justify-between px-3 py-2 cursor-pointer select-none border-b border-border"
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        <div className="flex items-center justify-between mb-4 dark:mb-6">
+          <h3 className="font-semibold flex items-center gap-2 text-sm dark:gap-3 dark:text-lg">
+            <div className="dark:p-2 dark:bg-gradient-to-br dark:from-blue-600 dark:to-indigo-700 dark:rounded-lg dark:shadow-lg">
+              <FileText size={16} className="text-primary dark:text-white" />
+            </div>
+            <span className="dark:text-white">Document Library</span>
+          </h3>
+          {totalFiles > 0 && (
+            <span className="text-xs text-muted-foreground dark:text-slate-300 dark:bg-slate-700/50 dark:px-2 dark:py-1 dark:rounded-full">
+              {completedFiles}/{totalFiles} ready
+            </span>
+          )}
+        </div>
+        {collapsed ? (
+          <ChevronRight size={16} className="text-muted-foreground" />
+        ) : (
+          <ChevronDown size={16} className="text-muted-foreground" />
         )}
       </div>
+
+      {!collapsed && (
+      <div className="p-3 flex flex-col gap-3">
+
 
       {/* Upload Area */}
       <div className="mb-4 dark:mb-6">
@@ -401,6 +418,8 @@ export default function RecentInsights({ onFileSelected, sessionId }: UploadProp
           }
         }
       `}</style>
+      </div>
+      )}
     </div>
   );
 }

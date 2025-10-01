@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Bot, Loader2, Send } from "lucide-react";
+import { Bot, ChevronDown, ChevronRight, Loader2, Send } from "lucide-react";
 import { Id } from "@/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -21,6 +21,8 @@ interface ChatMessage {
 }
 
 export default function AIAssistant({ onQuery, session, loading }: AIAssistantProps) {
+  const [collapsed, setCollapsed] = useState(false);
+
   const getChatbotHistory = useQuery(api.crud.chatbot.get, {
     sessionId: session._id,
   }) || [];
@@ -104,7 +106,7 @@ export default function AIAssistant({ onQuery, session, loading }: AIAssistantPr
             )}
             {chat.response || chat.pending ? (
               <div className="flex justify-start">
-                <div className="bg-gray-200 text-gray-800 rounded-lg p-3 max-w-[80%] break-words shadow-md dark:bg-primary/20 dark:text-blue-100 dark:border dark:border-blue-500/20 dark:backdrop-blur-sm dark:shadow-lg">
+                <div className="bg-gray-200 text-gray-800 rounded-lg p-3 max-w-[80%] break-words shadow-md text-sm dark:bg-primary/20 dark:text-blue-100 dark:border dark:border-blue-500/20 dark:backdrop-blur-sm dark:shadow-lg">
                   {chat.pending ? (
                     <Loader2 className="animate-spin" size={20} />
                   ) : (
@@ -119,29 +121,43 @@ export default function AIAssistant({ onQuery, session, loading }: AIAssistantPr
     );
   };
   return (
-    <div className="bg-background border border-border rounded-lg p-3 flex flex-col gap-3">
-      <h3 className="font-semibold flex items-center gap-2 text-sm">
-        <Bot size={16} className="text-primary" /> AI Assistant
-      </h3>
+    <div className="bg-background border border-border rounded-lg flex flex-col">
+      <div
+        className="flex items-center justify-between px-3 py-2 cursor-pointer select-none border-b border-border"
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        <h3 className="font-semibold flex items-center gap-2 text-sm">
+          <Bot size={16} className="text-primary" /> AI Assistant
+        </h3>
+        {collapsed ? (
+          <ChevronRight size={16} className="text-muted-foreground" />
+        ) : (
+          <ChevronDown size={16} className="text-muted-foreground" />
+        )}
+      </div>
 
-      <div id="chat-history" className="flex-1">{renderMessages()}</div>
+      {!collapsed && (
+      <div className="p-3 flex flex-col gap-3">
+        <div id="chat-history" className="flex-1">{renderMessages()}</div>
 
-      <form onSubmit={handleSubmit} className="flex gap-2 mt-2">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="flex-1 px-2 py-1 text-sm border border-border rounded-md bg-background focus:ring-1 focus:ring-primary focus:border-transparent"
-          placeholder="Ask about research..."
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-2 py-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
-        >
-          <Send size={14} />
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="flex gap-2 mt-2">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="flex-1 px-2 py-1 text-sm border border-border rounded-md bg-background focus:ring-1 focus:ring-primary focus:border-transparent"
+            placeholder="Ask about research..."
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-2 py-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
+          >
+            <Send size={14} />
+          </button>
+        </form>
+      </div>
+      )}
     </div>
   );
 }

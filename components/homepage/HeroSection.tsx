@@ -28,17 +28,6 @@ export default function HeroSection() {
 
       <div className="container mx-auto px-4 py-20 relative z-10">
         <div className="max-w-7xl mx-auto">
-          {/* Announcement Badge */}
-          <div className="flex justify-center mb-8 animate-fade-in">
-            <Badge
-              variant="secondary"
-              className="px-4 py-2 text-sm font-medium bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              {"New: AI-powered insights now available"}
-            </Badge>
-          </div>
-
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left Content */}
             <div className="text-left space-y-8 animate-fade-in-up">
@@ -46,7 +35,7 @@ export default function HeroSection() {
                 <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                   The fastest and most
                   <span className="text-primary bg-clip-text">
-                    <FlipWords words={["powerful", "Reliable"]} duration={3000} className="text-primary" />
+                    <FlipWords words={["Powerful", "Reliable"]} duration={3000} className="text-primary" />
                   </span>{" "}
                   research platform
                 </h1>
@@ -66,25 +55,6 @@ export default function HeroSection() {
                   Start your research
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
-
-                {/* <Button
-                  variant="outline"
-                  size="lg"
-                  className="px-8 py-4 text-lg font-semibold border-border hover:bg-accent bg-transparent"
-                >
-                  <Play className="mr-2 w-5 h-5" />
-                  Watch demo
-                </Button> */}
-              </div>
-
-              {/* Social Proof */}
-              <div className="flex items-center gap-6 pt-4">
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-primary text-primary" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground">Trusted by 10,000+ research teams</p>
               </div>
             </div>
 
@@ -149,12 +119,40 @@ export default function HeroSection() {
                 <div className="bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
                   <Search className="text-primary w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Smart Research</h3>
+                <h3 className="text-xl font-semibold mb-3">Web Crawling Capabilities</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Upload documents and get AI-powered analysis, recommendations, and intelligent search across all your
-                  data.
+                  Automatically crawl websites to collect, analyze, and organize data for deeper research and actionable insights.
                 </p>
               </div>
+            </div>
+          </div>
+
+          {/* Powered By Section */}
+          <div className="mt-24 text-center animate-fade-in-up animation-delay-700">
+            <h3 className="text-2xl font-semibold mb-6">Powered By</h3>
+            <div className="flex justify-center items-center gap-8">
+              <div className="flex flex-wrap gap-4">
+                <div className="w-28 bg-muted/20 rounded-lg border border-border/50 flex flex-col items-center justify-center p-2 hover:shadow-md transition-shadow">
+                  <img src="/convex.svg" alt="Convex Logo" className="w-16 h-auto" />
+                  <span className="text-muted-foreground text-sm mt-1">Convex</span>
+                </div>
+
+                <div className="w-28 bg-muted/20 rounded-lg border border-border/50 flex flex-col items-center justify-center p-2 hover:shadow-md transition-shadow">
+                  <img src="/firecrawl.svg" alt="Firecrawl Logo" className="w-16 h-auto" />
+                  <span className="text-muted-foreground text-sm mt-1">Firecrawl</span>
+                </div>
+
+                <div className="w-28 bg-muted/20 rounded-lg border border-border/50 flex flex-col items-center justify-center p-2 hover:shadow-md transition-shadow">
+                  <img src="/better-auth.svg" alt="Resend Logo" className="w-16 h-auto" />
+                  <span className="text-muted-foreground text-sm mt-1">Better Auth</span>
+                </div>
+
+                <div className="w-28 bg-muted/20 rounded-lg border border-border/50 flex flex-col items-center justify-center p-2 hover:shadow-md transition-shadow">
+                  <img src="/resend.svg" alt="Resend Logo" className="w-16 h-auto" />
+                  <span className="text-muted-foreground text-sm mt-1">Resend</span>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>

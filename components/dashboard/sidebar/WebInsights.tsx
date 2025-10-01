@@ -153,9 +153,17 @@ export default function WebInsights({ sessionId }: UploadProps) {
     <div className="bg-gradient-to-br from-white to-gray-50/50 border border-gray-200/60 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-blue-900/20 dark:border-slate-700/50 dark:shadow-xl dark:hover:shadow-2xl dark:hover:shadow-blue-500/10">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-gradient-to-br from-primary to-primary rounded-lg shadow-sm dark:from-blue-600 dark:to-indigo-700 dark:shadow-lg">
-          <Globe className="w-5 h-5 text-white" />
+        <div className="flex flex-col items-center mt-1">
+          <img
+            src="/firecrawl.svg"
+            alt="Coming Soon"
+            className="w-20"
+          />
+          <span className="text-xs text-gray-400 dark:text-slate-400 mt-1 text-center w-full block">
+            Powered by Firecrawl
+          </span>
         </div>
+
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Web Research Insights
