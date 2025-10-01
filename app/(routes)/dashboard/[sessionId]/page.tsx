@@ -48,6 +48,30 @@ export default function ResearchDashboard() {
   const createComment = useMutation(api.crud.comment.create);
   const updateComment = useMutation(api.crud.comment.update);
   const deleteComment = useMutation(api.crud.comment.deleteOne);
+  const comments =
+    useQuery(
+      api.crud.comment.getByDocumentId,
+      activeDocumentId ? { documentId: activeDocumentId } : "skip"
+    ) || [];
+
+
+  // notification
+  const createCommentNotification = useMutation(
+    api.crud.notification.commentNotificationCreate
+  );
+  const createReplyNotification = useMutation(
+    api.crud.notification.replyNotificationCreate
+  );
+  const updateNotification = useMutation(
+    api.crud.notification.update
+  )
+  const bulkUpdateNotification = useMutation(
+    api.crud.notification.bulkUpdate
+  )
+  const notifications = useQuery(
+    api.crud.notification.getBySessionAndUser,
+    user ? { sessionId, userId: user.id } : "skip"
+  );
 
   // collaborators
   const collaboratorResults = useQuery(api.crud.users.getCollaboratorUsers, {
@@ -71,13 +95,6 @@ export default function ResearchDashboard() {
     (wb) => wb._id === activeWhiteboardId
   );
   const updateDocument = useMutation(api.crud.document.update);
-
-  // Get comments for active document
-  const comments =
-    useQuery(
-      api.crud.comment.getByDocumentId,
-      activeDocumentId ? { documentId: activeDocumentId } : "skip"
-    ) || [];
 
   // Actions
   const handleChatbotQueryRaw = useAction(api.functions.ai.handleUserQuery);
@@ -229,6 +246,9 @@ export default function ResearchDashboard() {
           collaborators={collaboratorUsers}
           onInvite={() => setShowInviteModal(true)}
           onExport={handleExport}
+          notifications={notifications ?? []}
+          onNotificationRead={updateNotification}
+          onNotificationReadAll={bulkUpdateNotification}
         />
 
         {/* View Toggle and Switchers */}
@@ -287,12 +307,16 @@ export default function ResearchDashboard() {
                     placeholder="Begin your research document..."
                   />
                   <CommentSystem
+                    sessionId={sessionId}
+                    user={user}
                     comments={comments}
                     onAddComment={handleAddComment}
                     onResolveComment={handleResolveComment}
                     onReply={handleReplyToComment}
                     deleteComment={handleDeleteComment}
                     collaboratorUsers={collaboratorUsers}
+                    onMentionNotification={createCommentNotification}
+                    onReplyNotification={createReplyNotification}
                   />
                 </div>
               ) : (

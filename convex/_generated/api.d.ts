@@ -19,6 +19,7 @@ import type * as crud_document from "../crud/document.js";
 import type * as crud_groupChat from "../crud/groupChat.js";
 import type * as crud_insights from "../crud/insights.js";
 import type * as crud_invite from "../crud/invite.js";
+import type * as crud_notification from "../crud/notification.js";
 import type * as crud_scrapedData from "../crud/scrapedData.js";
 import type * as crud_session from "../crud/session.js";
 import type * as crud_test from "../crud/test.js";
@@ -64,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   "crud/groupChat": typeof crud_groupChat;
   "crud/insights": typeof crud_insights;
   "crud/invite": typeof crud_invite;
+  "crud/notification": typeof crud_notification;
   "crud/scrapedData": typeof crud_scrapedData;
   "crud/session": typeof crud_session;
   "crud/test": typeof crud_test;

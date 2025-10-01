@@ -119,15 +119,10 @@ export default function Header() {
                   </div>
                   <span className="font-medium">Recent Sessions</span>
                 </Link>
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-foreground hover:bg-white/10 hover:border-primary/30 transition-all duration-300 group backdrop-blur-sm cursor-pointer"
-                >
-                  <div className="p-1 rounded-lg bg-primary/20 group-hover:bg-primary/30 transition-colors">
-                    <User size={16} className="text-primary" />
-                  </div>
+                <div className="flex items-center gap-2 p-1 rounded-lg transition-colors">
+                  <User size={16} className="text-primary" />
                   <span className="font-medium">{user.name}</span>
-                </Link>
+                </div>
                 <button
                   onClick={() => setShowLogoutModal(true)}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all duration-300 group backdrop-blur-sm cursor-pointer"

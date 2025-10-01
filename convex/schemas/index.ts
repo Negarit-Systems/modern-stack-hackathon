@@ -9,6 +9,7 @@ import { sessionSchema } from "./session.schema";
 import { uploadSchema } from "./upload.schema";
 import { uploadEmbeddingsSchema } from "./uploadEmbeddings.schema";
 import { insightsSchema } from "./insights.schema";
+import { notificationSchema } from "./notification.schema";
 import { testSchema } from "./testing.schema";
 
 export {
@@ -23,5 +24,6 @@ export {
   uploadEmbeddingsSchema,
   insightsSchema,
   whiteboardsSchema,
+  notificationSchema,
   testSchema,
 };

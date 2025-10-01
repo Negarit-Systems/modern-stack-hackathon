@@ -2,32 +2,19 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { MessageSquare, Send, X, Check, Trash2, Reply, HelpCircle, AtSign } from "lucide-react";
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
 import { Id } from "@/convex/_generated/dataModel";
 
-interface Comment {
-  _id: string;
-  documentId: string;
-  userId: string;
-  parentId?: string;
-  content: string;
-  resolved: boolean;
-  assignedTo?: string[];
-  updatedAt?: number;
-  deletedAt?: number;
-  position?: { y: number };
-  _creationTime: number;
-  userName?: string;
-}
-
 interface CommentSystemProps {
+  sessionId: Id<"sessions">;
+  user: any;
   comments: any[];
   onAddComment: (content: string, position: { y: number }, assignedTo?: string[]) => void;
   onResolveComment: (commentId: string) => void;
   onReply: (commentId: string, content: string, assignedTo?: string[]) => void;
   deleteComment: (commentId: string) => void;
   collaboratorUsers: any[];
+  onMentionNotification: (args: { sessionId: Id<"sessions">; comment: any }) => void;
+  onReplyNotification: (args: { sessionId: Id<"sessions">; comment: any }) => void;
 }
 
 interface Collaborator {
@@ -82,7 +69,7 @@ const HighlightedText: React.FC<{ text: string; className?: string }> = ({ text,
         if (part.type === 'mention') {
           return (
             <span key={index} className="font-bold text-blue-600 dark:text-blue-400">
-              @{part.content}
+              {part.content}
             </span>
           );
         }
@@ -93,12 +80,16 @@ const HighlightedText: React.FC<{ text: string; className?: string }> = ({ text,
 };
 
 export default function CommentSystem({
+  sessionId,
+  user,
   comments,
   onAddComment,
   onResolveComment,
   onReply,
   deleteComment,
-  collaboratorUsers
+  collaboratorUsers,
+  onMentionNotification,
+  onReplyNotification
 }: CommentSystemProps) {
   const [newComment, setNewComment] = useState("");
   const [commentY, setCommentY] = useState<number | null>(null);
@@ -317,6 +308,19 @@ export default function CommentSystem({
     if (!newComment.trim() || commentY === null) return;
 
     const assignedTo = extractAssignedUsers(newComment);
+
+    // notification for mentions
+    if (assignedTo.length > 0) {
+      onMentionNotification({
+        sessionId: sessionId as Id<"sessions">,
+        comment: {
+          content: newComment,
+          userId: user?.id,
+          assignedTo,
+        }
+      })
+    }
+
     onAddComment(newComment, { y: commentY }, assignedTo);
     setNewComment("");
     setCommentY(null);
@@ -324,8 +328,31 @@ export default function CommentSystem({
 
   const handleReplySubmit = (commentId: string) => {
     if (!replyContent.trim()) return;
-
     const assignedTo = extractAssignedUsers(replyContent);
+
+    // notification for mentions
+    if (assignedTo.length > 0) {
+      onMentionNotification({
+        sessionId: sessionId as Id<"sessions">,
+        comment: {
+          content: newComment,
+          userId: user?.id,
+          assignedTo,
+        }
+      })
+    }
+
+    // notification for reply
+    onReplyNotification({
+      sessionId: sessionId as Id<"sessions">,
+      comment: {
+        content: replyContent,
+        userId: user?.id,
+        parentId: commentId,
+        assignedTo,
+      }
+    })
+
     onReply(commentId, replyContent, assignedTo);
     setReplyContent("");
     setReplyingTo(null);
@@ -507,9 +534,9 @@ export default function CommentSystem({
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
-                        {comment.userName?.charAt(0) || 'U'}
+                        {comment?.userName.charAt(0) || 'U'}
                       </div>
-                      <p className="font-medium text-sm text-gray-900 dark:text-gray-100">{comment.userName || "Unknown User"}</p>
+                      <p className="font-medium text-sm text-gray-900 dark:text-gray-100">{comment?.userName || "Unknown User"}</p>
                     </div>
                     <div className="flex gap-1">
                       {!comment.resolved && (
@@ -547,24 +574,8 @@ export default function CommentSystem({
                     </div>
                   </div>
                   <div className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                    <HighlightedText text={comment.content} />
+                    <HighlightedText text={comment.content } />
                   </div>
-
-                  {/* Show assigned users if any */}
-                  {comment.assignedTo && comment.assignedTo.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Assigned to:</span>
-                      {comment.assignedTo.map((userId: any) => {
-                        const assignedUser = collaboratorUsers?.find((u: Collaborator) => u._id === userId);
-                        return assignedUser ? (
-                          <span key={userId} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs">
-                            <AtSign size={10} />
-                            {assignedUser.name || assignedUser.email}
-                          </span>
-                        ) : null;
-                      })}
-                    </div>
-                  )}
 
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                     {new Date(comment._creationTime).toLocaleString()}
@@ -580,9 +591,9 @@ export default function CommentSystem({
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <div className="w-4 h-4 bg-gray-400 dark:bg-gray-500 text-white rounded-full flex items-center justify-center text-xs">
-                                  {reply.userName?.charAt(0) || 'U'}
+                                  {reply?.userName.charAt(0) || 'U'}
                                 </div>
-                                <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{reply.userName || "Unknown User"}</p>
+                                <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{reply?.userName || "Unknown User"}</p>
                               </div>
                               <button
                                 onClick={() => handleDelete(reply._id)}
@@ -595,22 +606,6 @@ export default function CommentSystem({
                             <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">
                               <HighlightedText text={reply.content} />
                             </div>
-
-                            {/* Show assigned users in replies if any */}
-                            {reply.assignedTo && reply.assignedTo.length > 0 && (
-                              <div className="mt-1 flex flex-wrap gap-1">
-                                {reply.assignedTo.map((userId: any) => {
-                                  const assignedUser = collaboratorUsers?.find((u: Collaborator) => u._id === userId);
-                                  return assignedUser ? (
-                                    <span key={userId} className="inline-flex items-center gap-1 px-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs">
-                                      <AtSign size={8} />
-                                      {assignedUser.name || assignedUser.email}
-                                    </span>
-                                  ) : null;
-                                })}
-                              </div>
-                            )}
-
                             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                               {new Date(reply._creationTime).toLocaleString()}
                             </p>
