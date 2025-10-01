@@ -11,7 +11,7 @@ A cutting-edge collaborative research platform that transforms web data into act
 ## ✨ Features
 
 ### Core Capabilities
-- **AI-Powered Research**: Generate comprehensive summaries and actionable insights from web data using advanced AI models (OpenAI GPT)
+- **AI-Powered Research**: Generate comprehensive summaries and actionable insights from web data using advanced AI models (Google Gemini)
 - **Real-Time Collaboration**: Work seamlessly with your team using integrated comments, chat, and shared workspaces
 - **Web Crawling & Data Extraction**: Automatically crawl websites to collect, analyze, and organize data for deeper research
 - **Rich Text Editor**: Professional document editing with collaborative features
@@ -44,7 +44,7 @@ A cutting-edge collaborative research platform that transforms web data into act
 - **Vector Database**: Convex with vector indexing for AI embeddings
 
 ### AI & Data Processing
-- **AI Models**: OpenAI GPT-4
+- **AI Models**: Google Gemini
 - **Web Scraping**: Firecrawl
 - **PDF Processing**: PDF.js with custom patches
 - **Document Parsing**: LangChain
@@ -90,7 +90,7 @@ Before you begin, ensure you have the following installed:
    BETTER_AUTH_URL=http://localhost:3000
 
    # AI Services
-   OPENAI_API_KEY=your_openai_api_key
+   GOOGLE_GENERATIVE_AI_API_KEY=your_google_ai_api_key
 
    # Email Service
    RESEND_API_KEY=your_resend_api_key
@@ -225,11 +225,11 @@ We welcome contributions! Please follow these steps:
 - Test your changes thoroughly
 - Update documentation as needed
 
-## 📄 License
+## License
 
 This project is proprietary software. All rights reserved.
 
-## 🆘 Support
+## Support
 
 If you encounter any issues or have questions:
 
@@ -241,7 +241,7 @@ If you encounter any issues or have questions:
 
 - **Convex** for the powerful backend-as-a-service platform
 - **Vercel** for hosting and deployment
-- **OpenAI** for AI capabilities
+- **Google** for AI capabilities
 - **Firecrawl** for web scraping technology
 - **Resend** for reliable email delivery
 
