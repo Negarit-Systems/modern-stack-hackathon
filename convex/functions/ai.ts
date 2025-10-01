@@ -96,3 +96,33 @@ export const handleUserQuery = action({
     });
   },
 });
+
+
+export const handleUserQueryOnChat = action({
+  args: {
+    sessionId: v.id("sessions"),
+    prompt: v.string(),
+  },
+  handler: async (ctx, { sessionId, prompt }): Promise<void> => {
+    let response = await ctx.runAction(
+      api.functions.ai.getContextBasedResponse,
+      {
+        sessionId,
+        prompt,
+      }
+    );
+
+    if (Array.isArray(response)) {
+      response = response.join("\n");
+    }
+
+    await ctx.runMutation(api.crud.groupChat.create, {
+      item: {
+        sessionId,
+        senderId: "BOT",
+        senderName: "🤖AI_Bot",
+        content: response,
+      },
+    });
+  },
+});

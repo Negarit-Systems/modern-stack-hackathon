@@ -30,6 +30,14 @@ export const sendMessage = mutation({
   },
 });
 
+export const create = mutation({
+  args: { item: v.object(groupChatSchema) },
+  handler: async (ctx, { item }) => {
+    const id = await ctx.db.insert("groupChats", item);
+    return id;
+  },
+});
+
 export const getMessages = query({
   args: {
     sessionId: v.id("sessions"),

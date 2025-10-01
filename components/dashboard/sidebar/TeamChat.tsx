@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { MessageCircle, Send, AtSign, Trash2 } from "lucide-react";
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useAction, useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useParams } from "next/navigation";
@@ -28,6 +28,7 @@ export default function TeamChat() {
   // Convex hooks
   const sendMessage = useMutation(api.crud.groupChat.sendMessage);
   const deleteMessage = useMutation(api.crud.groupChat.deleteMessage);
+  const chatbotQuery = useAction(api.functions.ai.handleUserQueryOnChat);
 
   const {
     results: messages,
@@ -45,12 +46,20 @@ export default function TeamChat() {
     mentionQuery ? { sessionId, email: mentionQuery } : "skip"
   );
 
-  const collaborators = collaboratorsData?.collaborators?.page || [];
+  // Add "bot" as a collaborator if mentionQuery matches "bot"
+  const collaborators =
+    mentionQuery.trim().toLowerCase().startsWith("b")
+      ? [{ _id: "bot", email: "bot", name: "AI Bot" }]
+      : collaboratorsData?.collaborators?.page || [];
 
   // Scroll to bottom when new messages arrive and autoScroll is enabled
   useEffect(() => {
-    if (autoScroll && messages?.length) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (autoScroll && messages?.length && messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth"
+      });
     }
   }, [messages, autoScroll]);
 
@@ -60,9 +69,22 @@ export default function TeamChat() {
 
     await sendMessage({ sessionId, content: newMessage });
     setNewMessage("");
+
+    // Check if message is directed to bot
+    if (newMessage.trim().startsWith('@bot')) {
+      const prompt = newMessage.trim().substring(4).trim();
+      if (prompt) {
+        await handleBotQuery(prompt);
+      }
+    }
     setShowMentions(false);
     setMentionQuery("");
-    setAutoScroll(true); // Enable auto-scroll when sending a new message
+    setAutoScroll(true);
+  };
+
+  const handleBotQuery = async (prompt: string) => {
+    await chatbotQuery({ sessionId, prompt });
+    return Promise.resolve();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,7 +189,7 @@ export default function TeamChat() {
     : [];
 
   return (
-    <div className="bg-background border border-border rounded-lg p-3">
+    <div className="bg-background border border-border rounded-lg p-3 flex flex-col h-[400px] overflow-hidden">
       <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm">
         <MessageCircle size={16} className="text-primary" />
         Team Chat
@@ -178,7 +200,7 @@ export default function TeamChat() {
 
       <div
         ref={messagesContainerRef}
-        className="space-y-3 mb-3 max-h-48 overflow-y-auto"
+        className="flex-1 space-y-3 mb-3 overflow-y-auto min-h-0"
       >
         {sortedMessages?.length === 0 && (
           <p className="text-xs text-muted-foreground">No messages yet.</p>
@@ -308,7 +330,13 @@ export default function TeamChat() {
               <p className="text-xs text-muted-foreground mb-2">
                 Mention someone
               </p>
-              {collaborators.map((collab: any) => (
+                {/* Option to tag AI bot */}
+                <button
+                  onClick={() => insertMention("bot", "AI Bot")}
+                  className="w-full text-left px-2 py-1 text-sm hover:bg-accent rounded-sm transition-colors flex items-center gap-2"
+                  >
+                </button>
+                {collaborators.map((collab: any) => (
                 <button
                   key={collab._id}
                   onClick={() => insertMention(collab.email, collab.name)}
@@ -316,10 +344,10 @@ export default function TeamChat() {
                 >
                   <span className="font-medium">@{collab.email}</span>
                   <span className="text-muted-foreground text-xs">
-                    ({collab.name})
+                  ({collab.name})
                   </span>
                 </button>
-              ))}
+                ))}
             </div>
           </div>
         )}
