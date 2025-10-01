@@ -15,6 +15,7 @@ import WhiteboardCanvas from "@/components/canvas/Whiteboard";
 import DocumentSwitcher from "@/components/canvas/DocumentSwitcher";
 import WhiteboardSwitcher from "@/components/canvas/WhiteboardSwitcher";
 import { FileText, Layout } from "lucide-react";
+import ExportModal from "@/components/modals/ExportModal";
 
 type ActiveView = "editor" | "whiteboard";
 
@@ -318,6 +319,13 @@ export default function ResearchDashboard() {
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
         sessionId={sessionId}
+      />
+
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        session={session}
+        document={activeDocument?.content || ""}
       />
     </div>
   ) : null;

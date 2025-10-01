@@ -54,7 +54,7 @@ export default function DocumentSwitcher({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-300 rounded-lg shadow-lg z-10 dark:bg-gray-800 dark:border-gray-600">
+        <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-300 rounded-lg shadow-lg z-50 dark:bg-gray-800 dark:border-gray-600">
           <div className="p-2 border-b border-gray-200 dark:border-gray-600">
             {!isCreating ? (
               <button

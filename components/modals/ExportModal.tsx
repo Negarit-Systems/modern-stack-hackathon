@@ -1,51 +1,35 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Download, Mail, FileText, Eye } from "lucide-react";
+import { X, Download, Mail, FileText, Eye, CheckCircle, AlertCircle, Trash2, Plus } from "lucide-react";
+import { generatePDF } from "@/lib/generate-pdf";
 
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
   session: any;
   document: string;
-  summaries: any[];
-  comments: any[];
 }
 
-export default function ExportModal({ 
-  isOpen, 
-  onClose, 
-  session, 
-  document, 
-  summaries, 
-  comments 
+export default function ExportModal({
+  isOpen,
+  onClose,
+  session,
+  document,
 }: ExportModalProps) {
-  const [exportFormat, setExportFormat] = useState("pdf");
-  const [includeComments, setIncludeComments] = useState(true);
-  const [includeSummaries, setIncludeSummaries] = useState(true);
-  const [emailRecipients, setEmailRecipients] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
-  const handleExport = async (action: "download" | "email") => {
-    setLoading(true);
-    
+  const handleDownload = async () => {
+    setPdfLoading(true);
+
     try {
-      // Mock export functionality
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      if (action === "email" && emailRecipients) {
-        console.log("Sending report via email to:", emailRecipients);
-        alert(`Report sent to: ${emailRecipients}`);
-      } else if (action === "download") {
-        console.log("Downloading report as:", exportFormat);
-        alert(`Report downloaded as ${exportFormat.toUpperCase()}`);
-      }
-      
+      generatePDF(session, document);
       onClose();
     } catch (error) {
       console.error("Export failed:", error);
     } finally {
-      setLoading(false);
+      setPdfLoading(false);
     }
   };
 
@@ -68,85 +52,21 @@ export default function ExportModal({
         </div>
 
         <div className="flex h-[calc(90vh-120px)]">
-          {/* Export Options */}
-          <div className="w-1/4 p-6 border-r border-border">
-            <h3 className="font-semibold mb-4">Export Options</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Format</label>
-                <select
-                  value={exportFormat}
-                  onChange={(e) => setExportFormat(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
-                >
-                  <option value="pdf">PDF</option>
-                  <option value="docx">Word Document</option>
-                  <option value="html">HTML</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={includeSummaries}
-                    onChange={(e) => setIncludeSummaries(e.target.checked)}
-                    className="rounded border-border"
-                  />
-                  <span className="text-sm">Include AI Summaries</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={includeComments}
-                    onChange={(e) => setIncludeComments(e.target.checked)}
-                    className="rounded border-border"
-                  />
-                  <span className="text-sm">Include Comments</span>
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Email Recipients (Optional)</label>
-                <textarea
-                  value={emailRecipients}
-                  onChange={(e) => setEmailRecipients(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="Enter email addresses separated by commas"
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex flex-col gap-2 pt-4">
-                <button
-                  onClick={() => handleExport("download")}
-                  disabled={loading}
-                  className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
-                >
-                  <Download size={16} />
-                  {loading ? "Generating..." : "Download"}
-                </button>
-                
-                {emailRecipients && (
-                  <button
-                    onClick={() => handleExport("email")}
-                    disabled={loading}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 disabled:opacity-50 transition-colors"
-                  >
-                    <Mail size={16} />
-                    {loading ? "Sending..." : "Send via Email"}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
           {/* Preview */}
           <div className="flex-1 p-6 overflow-y-auto">
-            <div className="flex items-center gap-2 mb-4">
-              <Eye size={16} className="text-primary" />
-              <h3 className="font-semibold">Report Preview</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Eye size={16} className="text-primary" />
+                <h3 className="font-semibold">Report Preview</h3>
+              </div>
+              <button
+                onClick={handleDownload}
+                disabled={pdfLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                <Download size={16} />
+                {pdfLoading ? "Downloading..." : "Download PDF"}
+              </button>
             </div>
 
             <div className="bg-background border border-border rounded-lg p-6 space-y-6">
@@ -155,9 +75,6 @@ export default function ExportModal({
                 <h1 className="text-2xl font-bold mb-2">{session?.topic}</h1>
                 <p className="text-muted-foreground">
                   Research Report • Generated on {new Date().toLocaleDateString()}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Collaborators: {session?.collaborators?.join(", ") || "N/A"}
                 </p>
               </div>
 
@@ -168,41 +85,6 @@ export default function ExportModal({
                   <div dangerouslySetInnerHTML={{ __html: document || "No content available" }} />
                 </div>
               </div>
-
-              {/* AI Summaries */}
-              {includeSummaries && summaries.length > 0 && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-3">AI-Generated Summaries</h2>
-                  <div className="space-y-3">
-                    {summaries.map((summary) => (
-                      <div key={summary.id} className="bg-muted/30 p-3 rounded-md">
-                        <p className="text-sm mb-1">{summary.content}</p>
-                        <p className="text-xs text-muted-foreground">Source: {summary.source}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Comments */}
-              {includeComments && comments.length > 0 && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-3">Comments & Feedback</h2>
-                  <div className="space-y-2">
-                    {comments.map((comment) => (
-                      <div key={comment.id} className="bg-muted/30 p-3 rounded-md">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm">{comment.userName}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(comment.timestamp).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-sm">{comment.content}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
