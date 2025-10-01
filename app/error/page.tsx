@@ -3,13 +3,14 @@ import React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-export default function ErrorPage({ message }: { message?: string }) {
+export default function ErrorPage() {
   const searchParams = useSearchParams();
   const reason = searchParams?.get("reason");
+  const messageParam = searchParams?.get("message");
 
   let title = "Something went wrong";
-  let description = message
-    ? message
+  let description = messageParam
+    ? messageParam
     : "An unexpected error occurred. You can try reloading the current page or go back to the home page.";
 
   if (reason === "invalid-invitation") {
@@ -70,7 +71,11 @@ export default function ErrorPage({ message }: { message?: string }) {
               ) : (
                 <>
                   <button
-                    onClick={() => window.location.reload()}
+                    onClick={() => {
+                      if (typeof window !== "undefined" && window.location) {
+                        window.location.reload();
+                      }
+                    }}
                     className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     Try again
