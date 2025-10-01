@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { MessageSquare, Send, X, Check, Trash2, Reply, HelpCircle, AtSign } from "lucide-react";
+import { MessageSquare, Send, X, Check, Trash2, Reply, HelpCircle } from "lucide-react";
 import { Id } from "@/convex/_generated/dataModel";
 
 interface CommentSystemProps {
@@ -207,7 +207,7 @@ export default function CommentSystem({
 
   // Insert mention into textarea
   const insertMention = (collaborator: Collaborator) => {
-    const mentionText = `@${collaborator.name || collaborator.email} `;
+    const mentionText = `@${collaborator.name?.split(" ").join("_") || collaborator.email} `;
     const textarea = currentTextarea === "newComment" ? textareaRef.current : replyTextareaRef.current;
 
     if (!textarea) return;
@@ -271,7 +271,7 @@ export default function CommentSystem({
     while ((match = mentionRegex.exec(content)) !== null) {
       const mentionText = match[1];
       const collaborator = collaboratorUsers?.find(
-        (coll: Collaborator) => coll.name === mentionText || coll.email === mentionText
+        (coll: Collaborator) => coll.name?.split(" ").join("_") === mentionText || coll.email === mentionText
       );
       if (collaborator) {
         assignedUsers.push(collaborator._id);
