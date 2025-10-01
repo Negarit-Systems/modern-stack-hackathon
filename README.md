@@ -174,7 +174,6 @@ Before you begin, ensure you have the following installed:
 │   ├── functions/       # Serverless functions
 │   ├── schemas/         # Database schemas
 │   └── auth.ts          # Authentication config
-├── hooks/               # Custom React hooks
 ├── lib/                 # Utility libraries
 └── public/              # Static assets
 ```
