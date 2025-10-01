@@ -33,14 +33,9 @@ export default function TeamChat() {
     { initialNumItems: 20 }
   );
 
-  console.log("Messages:", messages);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !user) return;
-
-    console.log("Sending message:", newMessage);
-    console.log("Session ID:", sessionId);
 
     await sendMessage({ sessionId, content: newMessage });
     setNewMessage("");
@@ -85,23 +80,18 @@ export default function TeamChat() {
           <p className="text-xs text-muted-foreground">No messages yet.</p>
         )}
         {messages
-          ?.slice(-5)
-          .reverse() // show in chronological order
+          ?.slice(-10)
+          .reverse()
           .map((message: any) => {
             const isSender = message.senderId === user.data?.user.id;
-            console.log(
-              "sender ID:",
-              message.senderId,
-              "User ID:",
-              user.data?.user.id
-            );
+
             return (
               <div
                 key={message._id}
                 className={`flex ${isSender ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`relative max-w-xs text-xs p-2 rounded-lg ${
+                  className={`relative max-w-[80%] text-xs rounded-lg ${
                     isSender
                       ? "bg-blue-500 text-white rounded-br-none"
                       : "bg-gray-200 text-gray-800 rounded-bl-none"
@@ -118,45 +108,50 @@ export default function TeamChat() {
                     </div>
                   )}
 
-                  <div className="flex items-center gap-1 mb-1">
-                    <span
-                      className={`font-medium ${
-                        isSender ? "text-blue-100" : "text-gray-600"
-                      }`}
-                    >
-                      {isSender
-                        ? "You"
-                        : (message.senderName?.split(" ")[0] ?? "Unknown")}
-                    </span>
-                    <span
-                      className={`text-xs ${
-                        isSender ? "text-blue-200" : "text-gray-500"
-                      }`}
-                    >
-                      {new Date(message._creationTime).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
+                  <div className="p-2">
+                    <div className="flex items-center gap-1 mb-1">
+                      <span
+                        className={`font-medium ${
+                          isSender ? "text-blue-100" : "text-gray-600"
+                        }`}
+                      >
+                        {isSender
+                          ? "You"
+                          : (message.senderName?.split(" ")[0] ?? "Unknown")}
+                      </span>
+                      <span
+                        className={`text-xs ${
+                          isSender ? "text-blue-200" : "text-gray-500"
+                        }`}
+                      >
+                        {new Date(message._creationTime).toLocaleTimeString(
+                          [],
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </span>
+                    </div>
+                    <p className="relative z-10 break-words whitespace-pre-wrap">
+                      {message.content
+                        .split(/(@\w+)/g)
+                        .map((part: string, index: number) =>
+                          part.startsWith("@") ? (
+                            <span
+                              key={index}
+                              className={`font-medium ${
+                                isSender ? "text-blue-100" : "text-blue-600"
+                              }`}
+                            >
+                              {part}
+                            </span>
+                          ) : (
+                            part
+                          )
+                        )}
+                    </p>
                   </div>
-                  <p className="relative z-10">
-                    {message.content
-                      .split(/(@\w+)/g)
-                      .map((part: string, index: number) =>
-                        part.startsWith("@") ? (
-                          <span
-                            key={index}
-                            className={`font-medium ${
-                              isSender ? "text-blue-100" : "text-blue-600"
-                            }`}
-                          >
-                            {part}
-                          </span>
-                        ) : (
-                          part
-                        )
-                      )}
-                  </p>
                 </div>
               </div>
             );

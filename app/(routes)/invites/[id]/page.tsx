@@ -26,8 +26,6 @@ export default function InvitePage() {
 
   const addCollaborator = useMutation(api.crud.session.addCollaborator);
 
-  console.log("Invitation:", invitation);
-
   useEffect(() => {
     if (!data?.user) {
       setShowAuthModal(true);

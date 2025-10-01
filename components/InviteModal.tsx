@@ -41,12 +41,9 @@ export default function InviteModal({
     router.push("/login");
   }
 
-  // Convex mutations
   const sendInvite = useAction(api.functions.emailInvites.sendInvite);
-  // const resendInvite = useAction(api.functions.emailInvites.resendInvite);
   const cancelInvite = useMutation(api.functions.emailInvites.cancelInvite);
 
-  // Track loading/error for individual invite actions
   const [inviteActionLoading, setInviteActionLoading] = useState<string | null>(
     null
   );
@@ -55,52 +52,6 @@ export default function InviteModal({
   );
 
   if (!isOpen) return null;
-
-  // const handleSendInvites = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   setError(null);
-  //   setSuccess(null);
-
-  //   if (!emails.trim()) return;
-  //   setLoading(true);
-
-  //   try {
-  //     const emailList = emails
-  //       .split(",")
-  //       .map((email) => email.trim())
-  //       .filter(Boolean);
-
-  //     if (emailList.length === 0) {
-  //       setError("Please enter at least one valid email address.");
-  //       setLoading(false);
-  //       return;
-  //     }
-
-  //     await sendBatchInvites({
-  //       sessionId: sessionId as Id<"sessions">,
-  //       invites: emailList.map((email) => ({ email, role })),
-  //       inviterName: "", // Optionally pass inviterName if available in context
-  //       sessionTitle: "", // Optionally pass sessionTitle if available in context
-  //     });
-
-  //     setSuccess(
-  //       `Invites sent to ${emailList.length} collaborator${emailList.length !== 1 ? "s" : ""}!`
-  //     );
-
-  //     setEmails("");
-  //   } catch (err: any) {
-  //     // Try to extract a detailed error message from Convex/Resend
-  //     let msg = err?.message || "Failed to send invites.";
-  //     // Convex errors may be nested in data.error or data.response?.data?.error
-  //     if (err?.data?.error) msg = err.data.error;
-  //     if (err?.response?.data?.error) msg = err.response.data.error;
-  //     setError(msg);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // Cancel invite
 
   const handleRemoveInvite = async (inviteId: string) => {
     setInviteActionError(null);
@@ -121,6 +72,13 @@ export default function InviteModal({
     setSuccess(null);
 
     if (!email.trim()) return;
+
+    const currentUserEmail = authUser.data?.user?.email;
+    if (email.trim().toLowerCase() === currentUserEmail?.toLowerCase()) {
+      setError("You cannot send an invitation to yourself.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -143,26 +101,6 @@ export default function InviteModal({
       setInviteActionLoading(null);
     }
   };
-
-  // Resend invite
-  // const handleResendInvite = async (invite: any) => {
-  //   setInviteActionError(null);
-  //   setInviteActionLoading(invite._id);
-
-  //   try {
-  //     await resendInvite({
-  //       inviteId: invite._id,
-  //       inviterName: "",
-  //       sessionTitle: "",
-  //     });
-  //   } catch (err: any) {
-  //     setInviteActionError(
-  //       err?.message || `Failed to resend invite to ${invite.email}`
-  //     );
-  //   } finally {
-  //     setInviteActionLoading(null);
-  //   }
-  // };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -262,18 +200,6 @@ export default function InviteModal({
                       </span>
                     </div>
                     <div className="flex gap-2">
-                      {/* <button
-                        onClick={() => handleResendInvite(invite)}
-                        className="p-1 hover:bg-accent rounded transition-colors disabled:opacity-50"
-                        title="Resend Invite"
-                        disabled={inviteActionLoading === invite._id}
-                      >
-                        {inviteActionLoading === invite._id ? (
-                          <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
-                        ) : (
-                          <Mail size={16} />
-                        )}
-                      </button> */}
                       <button
                         onClick={() => handleRemoveInvite(invite._id)}
                         className="p-1 hover:bg-destructive/20 rounded transition-colors disabled:opacity-50"
