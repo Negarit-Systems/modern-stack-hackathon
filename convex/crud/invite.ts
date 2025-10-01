@@ -14,7 +14,10 @@ export const get = query({
 export const getOne = query({
   args: { id: v.id("invites") },
   handler: async (ctx, { id }) => {
-    const item = await ctx.db.get(id);
+    const item = await ctx.db
+      .query("invites")
+      .filter((q) => q.eq(q.field("_id"), id))
+      .first();
     return item;
   },
 });
@@ -48,6 +51,23 @@ export const update = mutation({
   },
   handler: async (ctx, { id, updates }) => {
     await ctx.db.patch(id, updates);
+  },
+});
+
+export const updateStatusToAccepted = mutation({
+  args: {
+    id: v.id("invites"),
+  },
+  handler: async (ctx, { id }) => {
+    const invite = await ctx.db.get(id);
+    if (!invite) {
+      throw new Error("Invite not found");
+    }
+
+    await ctx.db.patch(id, {
+      status: "ACCEPTED",
+      updatedAt: Date.now(),
+    });
   },
 });
 

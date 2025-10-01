@@ -81,3 +81,27 @@ export const deleteOne = mutation({
     await ctx.db.delete(id);
   },
 });
+
+export const addCollaborator = mutation({
+  args: {
+    sessionId: v.id("sessions"),
+    userId: v.string(),
+  },
+  handler: async (ctx, { sessionId, userId }) => {
+    const session = await ctx.db.get(sessionId);
+    if (!session) {
+      throw new Error("Session not found");
+    }
+
+    if (session.collaboratorIds.includes(userId)) {
+      throw new Error("User is already a collaborator");
+    }
+
+    await ctx.db.patch(sessionId, {
+      collaboratorIds: [...session.collaboratorIds, userId],
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});

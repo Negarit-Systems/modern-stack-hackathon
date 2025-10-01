@@ -22,6 +22,8 @@ interface AuthenticationModalProps {
   onAuthenticated: (user: any) => void;
   isSignUp: boolean;
   setIsSignUp: (isSignUp: boolean) => void;
+  isForced?: boolean;
+  email?: string;
 }
 
 export default function AuthenticationModal({
@@ -30,6 +32,8 @@ export default function AuthenticationModal({
   onAuthenticated,
   isSignUp = false,
   setIsSignUp,
+  isForced = false,
+  email = "",
 }: AuthenticationModalProps) {
   // const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -163,6 +167,8 @@ export default function AuthenticationModal({
               <input
                 type="email"
                 value={formData.email}
+                disabled={isForced}
+                defaultValue={isForced ? email : ""}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
