@@ -154,11 +154,6 @@ export default function InviteModal({
             {error && (
               <div className="text-destructive text-sm mb-2">{error}</div>
             )}
-            {success && (
-              <div className="text-green-600 dark:text-green-400 text-sm mb-2">
-                {success}
-              </div>
-            )}
 
             <button
               type="submit"

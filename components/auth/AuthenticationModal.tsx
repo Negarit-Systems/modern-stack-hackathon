@@ -19,7 +19,9 @@ const Player = dynamic(
 interface AuthenticationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAuthenticated: (user: any) => void;
+  // Note: The 'user' parameter is only relevant for email/password flow,
+  // but kept for compatibility with that flow.
+  onAuthenticated: (user?: any) => void;
   isSignUp: boolean;
   setIsSignUp: (isSignUp: boolean) => void;
   isForced?: boolean;
@@ -35,7 +37,6 @@ export default function AuthenticationModal({
   isForced = false,
   email = "",
 }: AuthenticationModalProps) {
-  // const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -47,7 +48,10 @@ export default function AuthenticationModal({
   const [error, setError] = useState("");
 
   const handleAuthSubmit = async () => {
-    const user = await authClient.signIn.social({
+    setError("");
+    setLoading(true);
+
+    const res = await authClient.signIn.social({
       provider: "google",
       callbackURL: "/",
       errorCallbackURL: "/error",
@@ -55,14 +59,11 @@ export default function AuthenticationModal({
       disableRedirect: false,
     });
 
-    if (user.error) {
-      setError(user.error.message ?? "Signup failed");
+    if (res.error) {
+      setLoading(false);
+      setError(res.error.message ?? "Google sign-in failed before redirect");
       return;
     }
-    onAuthenticated(user);
-
-    onClose();
-    setFormData({ name: "", email: "", password: "", confirmPassword: "" });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,10 +75,12 @@ export default function AuthenticationModal({
       if (isSignUp) {
         if (formData.password !== formData.confirmPassword) {
           setError("Passwords do not match");
+          setLoading(false);
           return;
         }
         if (formData.password.length < 8) {
           setError("Password must be at least 8 characters");
+          setLoading(false);
           return;
         }
         const res = await authClient.signUp.email({
@@ -91,6 +94,7 @@ export default function AuthenticationModal({
           return;
         }
 
+        // KEEP: Email/password flow is synchronous and handles its own closure
         onAuthenticated(res.data?.user);
       } else {
         const res = await authClient.signIn.email({
@@ -102,8 +106,12 @@ export default function AuthenticationModal({
           setError(res.error.message ?? "Login failed");
           return;
         }
+
+        // KEEP: Email/password flow is synchronous and handles its own closure
         onAuthenticated(res.data?.user);
       }
+
+      // KEEP: Close modal and reset form for successful email/password flow
       onClose();
       setFormData({ name: "", email: "", password: "", confirmPassword: "" });
     } catch (err: any) {
@@ -116,6 +124,7 @@ export default function AuthenticationModal({
   if (!isOpen) return null;
 
   return (
+    // ... rest of the modal JSX (no changes needed here)
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-card border border-border rounded-lg w-full max-w-md dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-blue-900/20 dark:border-slate-700/50 dark:rounded-2xl dark:shadow-2xl">
         <div className="flex items-center justify-between p-6 border-b border-border dark:border-slate-700/50">
@@ -166,9 +175,8 @@ export default function AuthenticationModal({
               />
               <input
                 type="email"
-                value={formData.email}
+                value={isForced ? email : formData.email}
                 disabled={isForced}
-                defaultValue={isForced ? email : ""}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
