@@ -6,15 +6,18 @@ import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useParams } from "next/navigation";
+import { authClient } from "@/app/lib/auth.client";
 
 interface TeamChatProps {
   // sessionId: string;
   user: { _id: string; name: string };
 }
 
-export default function TeamChat({ user }: TeamChatProps) {
+export default function TeamChat() {
   const [newMessage, setNewMessage] = useState("");
   const [showMentions, setShowMentions] = useState(false);
+
+  const user = authClient.useSession();
 
   const sId = useParams<{ sessionId: string }>() as { sessionId: string };
 
@@ -29,6 +32,8 @@ export default function TeamChat({ user }: TeamChatProps) {
     },
     { initialNumItems: 20 }
   );
+
+  console.log("Messages:", messages);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +80,7 @@ export default function TeamChat({ user }: TeamChatProps) {
         Team Chat
       </h3>
 
-      <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
+      <div className="space-y-3 mb-3 max-h-48 overflow-y-auto">
         {messages?.length === 0 && (
           <p className="text-xs text-muted-foreground">No messages yet.</p>
         )}
@@ -83,46 +88,76 @@ export default function TeamChat({ user }: TeamChatProps) {
           ?.slice(-5)
           .reverse() // show in chronological order
           .map((message: any) => {
-            const isSender = message.senderId === user._id;
+            const isSender = message.senderId === user.data?.user.id;
+            console.log(
+              "sender ID:",
+              message.senderId,
+              "User ID:",
+              user.data?.user.id
+            );
             return (
               <div
                 key={message._id}
-                className={`text-xs p-2 rounded-md ${
-                  isSender
-                    ? "bg-primary/20 text-primary"
-                    : "bg-accent text-foreground"
-                }`}
+                className={`flex ${isSender ? "justify-end" : "justify-start"}`}
               >
-                <div className="flex items-center gap-1 mb-1">
-                  <span
-                    className={`font-medium ${
-                      isSender ? "text-primary" : "text-foreground"
-                    }`}
-                  >
-                    {isSender
-                      ? "You"
-                      : (message.senderName?.split(" ")[0] ?? "Unknown")}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(message._creationTime).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
+                <div
+                  className={`relative max-w-xs text-xs p-2 rounded-lg ${
+                    isSender
+                      ? "bg-blue-500 text-white rounded-br-none"
+                      : "bg-gray-200 text-gray-800 rounded-bl-none"
+                  }`}
+                >
+                  {/* Directional arrow */}
+                  {isSender ? (
+                    <div className="absolute -right-1 top-0 w-3 h-3">
+                      <div className="w-3 h-3 bg-blue-500 transform rotate-45 origin-bottom-left"></div>
+                    </div>
+                  ) : (
+                    <div className="absolute -left-1 top-0 w-3 h-3">
+                      <div className="w-3 h-3 bg-gray-200 transform rotate-45 origin-bottom-right"></div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-1 mb-1">
+                    <span
+                      className={`font-medium ${
+                        isSender ? "text-blue-100" : "text-gray-600"
+                      }`}
+                    >
+                      {isSender
+                        ? "You"
+                        : (message.senderName?.split(" ")[0] ?? "Unknown")}
+                    </span>
+                    <span
+                      className={`text-xs ${
+                        isSender ? "text-blue-200" : "text-gray-500"
+                      }`}
+                    >
+                      {new Date(message._creationTime).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                  <p className="relative z-10">
+                    {message.content
+                      .split(/(@\w+)/g)
+                      .map((part: string, index: number) =>
+                        part.startsWith("@") ? (
+                          <span
+                            key={index}
+                            className={`font-medium ${
+                              isSender ? "text-blue-100" : "text-blue-600"
+                            }`}
+                          >
+                            {part}
+                          </span>
+                        ) : (
+                          part
+                        )
+                      )}
+                  </p>
                 </div>
-                <p>
-                  {message.content
-                    .split(/(@\w+)/g)
-                    .map((part: string, index: number) =>
-                      part.startsWith("@") ? (
-                        <span key={index} className="text-primary font-medium">
-                          {part}
-                        </span>
-                      ) : (
-                        part
-                      )
-                    )}
-                </p>
               </div>
             );
           })}
