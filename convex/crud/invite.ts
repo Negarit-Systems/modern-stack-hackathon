@@ -14,10 +14,8 @@ export const get = query({
 export const getOne = query({
   args: { id: v.id("invites") },
   handler: async (ctx, { id }) => {
-    const item = await ctx.db
-      .query("invites")
-      .filter((q) => q.eq(q.field("_id"), id))
-      .first();
+    // More direct and efficient way to get a document by ID
+    const item = await ctx.db.get(id);
     return item;
   },
 });

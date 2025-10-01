@@ -14,10 +14,16 @@ export interface EmailInviteData {
 }
 
 // Generate the invitation URL
-export function generateInviteUrl(inviteId: string, baseUrl?: string): string {
+export function generateInviteUrl(
+  inviteId: string,
+  sessionId: string,
+  email: string,
+  baseUrl?: string
+): string {
   const base =
     baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  return `${base}/invites/${inviteId}`;
+
+  return `${base}/invites/${inviteId}?sessionId=${encodeURIComponent(sessionId)}&email=${encodeURIComponent(email)}`;
 }
 
 // Send invitation email
@@ -25,7 +31,11 @@ export async function sendInviteEmail(
   data: EmailInviteData
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
-    const sessionUrl = generateInviteUrl(data.inviteId);
+    const sessionUrl = generateInviteUrl(
+      data.inviteId,
+      data.sessionId,
+      data.to
+    );
     const templateData: EmailTemplateData = {
       inviterName: data.inviterName,
       sessionTitle: data.sessionTitle,

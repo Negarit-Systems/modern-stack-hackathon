@@ -52,13 +52,6 @@ export default function ErrorPage() {
               </Link>
             </div>
 
-            <details className="mt-4 rounded-md border border-gray-100 bg-gray-50 p-3">
-              <summary className="text-sm text-gray-600 cursor-pointer">
-                Show technical details
-              </summary>
-              <pre className="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-xs text-gray-800"></pre>
-            </details>
-
             <p className="mt-4 text-xs text-gray-400">
               If this keeps happening, contact support with the information
               above.

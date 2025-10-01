@@ -1,8 +1,27 @@
 "use client";
 import React from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
-export default function ErrorPage() {
+export default function ErrorPage({ message }: { message?: string }) {
+  const searchParams = useSearchParams();
+  const reason = searchParams?.get("reason");
+
+  let title = "Something went wrong";
+  let description = message
+    ? message
+    : "An unexpected error occurred. You can try reloading the current page or go back to the home page.";
+
+  if (reason === "invalid-invitation") {
+    title = "Invalid Invitation";
+    description =
+      "The invitation link you used is invalid or has expired. Please check the link or request a new invitation.";
+  } else if (reason === "invite-acceptance-failed") {
+    title = "Invitation Acceptance Failed";
+    description =
+      "There was an issue accepting your invitation. Please try again or contact support for assistance.";
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white p-6">
       <div className="w-full max-w-2xl bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl shadow-lg p-8">
@@ -28,41 +47,44 @@ export default function ErrorPage() {
           </div>
 
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold text-gray-900">
-              Something went wrong
-            </h1>
-            <p className="mt-2 text-sm text-gray-500">
-              An unexpected error occurred. You can try reloading the current
-              page or go back to the home page.
-            </p>
+            <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
+            <p className="mt-2 text-sm text-gray-500">{description}</p>
 
             <div className="mt-4 flex gap-3">
-              <button
-                onClick={() => window.location.reload()}
-                className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                Try again
-              </button>
+              {reason === "invalid-invitation" ||
+              reason === "invite-acceptance-failed" ? (
+                <>
+                  <Link
+                    href="/"
+                    className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    Go to Home
+                  </Link>
+                  <Link
+                    href="/contact"
+                    className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Contact Support
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    Try again
+                  </button>
 
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Home
-              </Link>
+                  <Link
+                    href="/"
+                    className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Home
+                  </Link>
+                </>
+              )}
             </div>
-
-            <details className="mt-4 rounded-md border border-gray-100 bg-gray-50 p-3">
-              <summary className="text-sm text-gray-600 cursor-pointer">
-                Show technical details
-              </summary>
-              <pre className="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-xs text-gray-800"></pre>
-            </details>
-
-            <p className="mt-4 text-xs text-gray-400">
-              If this keeps happening, contact support with the information
-              above.
-            </p>
           </div>
         </div>
       </div>
